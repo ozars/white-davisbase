@@ -68,4 +68,3 @@ Catch::Generators::GeneratorWrapper<T> enum_range(T start, T end)
     std::unique_ptr<Catch::Generators::IGenerator<T>>(
       new EnumRangeGenerator<T>(start, end)));
 }
-
