@@ -211,33 +211,32 @@ struct Command
 
 } // namespace white::davisbase::ast
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::Command, command);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::Command, command)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ShowTablesCommand);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ShowTablesCommand)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DropTableCommand, table_name);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DropTableCommand, table_name)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
-                          columns);
+                          columns)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::NotNull);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::NotNull)
 
-BOOST_FUSION_ADAPT_STRUCT(
-  white::davisbase::ast::ColumnModifiers::AutoIncrement);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::AutoIncrement)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::Unique);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::Unique)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::PrimaryKey);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::PrimaryKey)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::DefaultValue,
-                          value);
+                          value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers, is_null,
                           not_null, primary_key, auto_increment, unique,
-                          default_value);
+                          default_value)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::Column, name, type, modifiers);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::Column, name, type, modifiers)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::LiteralValue, value);
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::LiteralValue, value)
