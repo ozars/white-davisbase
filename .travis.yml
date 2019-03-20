@@ -14,17 +14,22 @@ addons:
       - sourceline: 'ppa:mhier/libboost-latest'
       - ubuntu-toolchain-r-test
     packages:
-      - lcov
       - gcc-8
       - g++-8
       - libboost1.67
       - libboost1.67-dev
 
 env:
-  - COMPILER=g++-8 GCOV=gcov-8
+  - MYCC=gcc-8 MYAR=gcc-ar-8 MYRANLIB=gcc-ranlib-8 MYCXX=g++-8 GCOV=gcov-8
 
 before_install:
-  - export CXX=$COMPILER
+  - export CXX=$MYCXX
+  - export CC=$MYCC
+  - export AR=$MYAR
+  - export RANLIB=$MYRANLIB
+  - wget http://downloads.sourceforge.net/ltp/lcov-1.14.tar.gz
+  - tar xzvf lcov-1.14.tar.gz
+  - export PATH="`pwd`/lcov-1.14/bin:$PATH"
 
 # (fake) install dependencies (usually involves wget, configure, make, ...)
 # install into cache folder (build binaries+headers only, no sources and do NOT build there)
