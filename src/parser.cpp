@@ -2,8 +2,6 @@
 
 #include <boost/spirit/include/qi.hpp>
 
-#include "ast.hpp"
-
 namespace qi = boost::spirit::qi;
 
 namespace white::davisbase::parser {

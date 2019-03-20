@@ -34,7 +34,7 @@ inline std::string to_string(const ColumnType& type)
                          "DOUBLE",  "DATETIME", "DATE", "TEXT"};
   if (type < ColumnType::_FIRST || type > ColumnType::_LAST)
     return "UNKNOWN";
-  return vals[static_cast<std::underlying_type_t<ColumnType>>(type)];
+  return vals[static_cast<size_t>(type)];
 }
 
 inline std::ostream& operator<<(std::ostream& os, const ColumnType& type)
@@ -60,7 +60,7 @@ inline std::string to_string(const OperatorType& type)
     std::array{"LESS_EQUAL", "LESS", "EQUAL", "GREATER_EQUAL", "GREATER"};
   if (type < OperatorType::_FIRST || type > OperatorType::_LAST)
     return "UNKNOWN";
-  return vals[static_cast<std::underlying_type_t<OperatorType>>(type)];
+  return vals[static_cast<size_t>(type)];
 }
 
 inline std::ostream& operator<<(std::ostream& os, const OperatorType& op)
