@@ -5,59 +5,7 @@
 
 #include "catch2/catch.hpp"
 
-/* Utility to join stuff */
-
-template<class Str, class It>
-Str join(It begin, const It end, const Str& sep)
-{
-  using char_type = typename Str::value_type;
-  using traits_type = typename Str::traits_type;
-  using allocator_type = typename Str::allocator_type;
-  using ostringstream_type =
-    std::basic_ostringstream<char_type, traits_type, allocator_type>;
-
-  ostringstream_type result;
-
-  if (begin != end)
-    result << *begin++;
-  while (begin != end) {
-    result << sep;
-    result << *begin++;
-  }
-  return result.str();
-}
-
-template<class Str, class It, typename Accessor>
-Str join(It begin, const It end, const Str& sep, Accessor accessor)
-{
-  using char_type = typename Str::value_type;
-  using traits_type = typename Str::traits_type;
-  using allocator_type = typename Str::allocator_type;
-  using ostringstream_type =
-    std::basic_ostringstream<char_type, traits_type, allocator_type>;
-
-  ostringstream_type result;
-
-  if (begin != end)
-    result << acessor(*begin++);
-  while (begin != end) {
-    result << sep;
-    result << accessor(*begin++);
-  }
-  return result.str();
-}
-
-template<class Str, class Container>
-Str join(Container container, Str delimiter)
-{
-  return join(container.begin(), container.end(), delimiter);
-}
-
-template<class Str, class Container, class Accessor>
-Str join(Container container, Str delimiter, Accessor accessor)
-{
-  return join(container.begin(), container.end(), delimiter, accessor);
-}
+#include "util.hpp"
 
 /* Utility for going over enum types */
 
@@ -107,16 +55,6 @@ auto mapf(Func&& function, Catch::Generators::GeneratorWrapper<U>&& generator)
                 "the output of the generator");
   return Catch::Generators::map<T, U, Func>(std::forward<Func>(function),
                                             std::move(generator));
-}
-
-template<typename Dest = void, typename... Arg>
-constexpr auto make_array(Arg&&... arg)
-{
-  if constexpr (std::is_same<void, Dest>::value)
-    return std::array<std::common_type_t<std::decay_t<Arg>...>, sizeof...(Arg)>{
-      {std::forward<Arg>(arg)...}};
-  else
-    return std::array<Dest, sizeof...(Arg)>{{std::forward<Arg>(arg)...}};
 }
 
 /* Allow capture by copy in generators.*/

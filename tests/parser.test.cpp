@@ -19,6 +19,8 @@ using std::tuple;
 
 using white::davisbase::ast::Command;
 using white::davisbase::parser::Parser;
+using white::util::join;
+using white::util::make_array;
 
 TEST_CASE("Parse showing tables", "[parser][show_tables]")
 {

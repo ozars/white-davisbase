@@ -188,18 +188,10 @@ struct CreateTableCommand
 
 inline std::ostream& operator<<(std::ostream& os, const CreateTableCommand& cmd)
 {
+  using util::join;
   util::OutputManipulator om(os);
-  bool first = true;
-  os << "CreateTableCommand(table_name=\"" << cmd.table_name << "\", columns=[";
-  for (auto& column : cmd.columns) {
-    if (!first)
-      os << ", ";
-    else
-      first = false;
-    os << column;
-  }
-  os << "])";
-  return os;
+  return os << "CreateTableCommand(table_name=\"" << cmd.table_name
+            << "\", columns=[" << join(cmd.columns, ", ") << "])";
 }
 
 struct Command

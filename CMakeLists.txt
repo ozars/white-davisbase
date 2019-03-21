@@ -20,7 +20,7 @@ set(TESTS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/tests")
 set(CATCH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/Catch2")
 
 # Set source file names
-set(DAVISBASE_SOURCE_FILES main.cpp parser.hpp parser.cpp ast.hpp ast.cpp util.hpp boost_test.hpp)
+set(DAVISBASE_SOURCE_FILES main.cpp parser.hpp parser.cpp ast.hpp ast.cpp util.hpp)
 set(TESTS_SOURCE_FILES main.test.cpp parser.test.cpp utility.test.hpp)
 
 # Boost is necessary for parser
