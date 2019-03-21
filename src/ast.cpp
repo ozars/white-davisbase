@@ -24,4 +24,9 @@ void CreateTableCommand::execute()
   std::cout << *this << std::endl;
 }
 
+void InsertIntoCommand::execute()
+{
+  std::cout << *this << std::endl;
+}
+
 } // namespace white::davisbase::ast

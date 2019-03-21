@@ -11,6 +11,7 @@ using std::string;
 using ast::Command;
 using ast::CreateTableCommand;
 using ast::DropTableCommand;
+using ast::InsertIntoCommand;
 using ast::ShowTablesCommand;
 
 using ast::Column;
@@ -126,7 +127,8 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
     /* DML */
 
-    insert_into = Q("INSERT", "INTO") >> table_name >> Q("VALUES") >> '(' >>
+    insert_into = Q("INSERT", "INTO") >> table_name >>
+                  -('(' >> column_name % ',' >> ')') >> Q("VALUES") >> '(' >>
                   literal % ',' >> ')';
     delete_from = Q("DELETE", "FROM") >> table_name >> where;
     update = Q("UPDATE") >> table_name >> Q("SET") >>
@@ -139,7 +141,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
     /* Main command */
 
-    command = (show_tables | drop_table | create_table) >> ';';
+    command = (show_tables | drop_table | create_table | insert_into) >> ';';
   }
 
   qi::rule<Iterator, string()> identifier;
@@ -169,7 +171,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, DropTableCommand(), Skipper> drop_table;
   qi::rule<Iterator, Skipper> create_index;
 
-  qi::rule<Iterator, Skipper> insert_into;
+  qi::rule<Iterator, InsertIntoCommand(), Skipper> insert_into;
 
   qi::rule<Iterator, Skipper> delete_from;
   qi::rule<Iterator, Skipper> update;
