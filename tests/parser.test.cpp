@@ -192,12 +192,26 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "omer";
             }},
+      tuple{string("DEFAULT '\\'omer\\''"),
+            [](const Column& column) {
+              auto& def = column.modifiers.default_value;
+              return def.has_value() &&
+                     holds_alternative<string>(def.value().literal.value) &&
+                     get<string>(def.value().literal.value) == "'omer'";
+            }},
       tuple{string("DEFAULT \"ozarslan\""),
             [](const Column& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "ozarslan";
+            }},
+      tuple{string("DEFAULT \"\\\"ozarslan\\\"\""),
+            [](const Column& column) {
+              auto& def = column.modifiers.default_value;
+              return def.has_value() &&
+                     holds_alternative<string>(def.value().literal.value) &&
+                     get<string>(def.value().literal.value) == "\"ozarslan\"";
             }},
       tuple{string("DEFAULT 1337"),
             [](const Column& column) {

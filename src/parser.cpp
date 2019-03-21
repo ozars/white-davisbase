@@ -78,8 +78,8 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
     // clang-format off
     string_literal = (
-      '"' >> +(~char_('"') | ('\\' >> char_("\\\""))) >> '"' |
-      '\'' >> +(~char_('\'') | ('\\' >> char_("\\'"))) >> '\''
+      '"' >> +(('\\' >> char_("\\\"")) | ~char_('"')) >> '"' |
+      '\'' >> +(('\\' >> char_("\\'")) | ~char_('\'')) >> '\''
     );
     // clang-format on
 
