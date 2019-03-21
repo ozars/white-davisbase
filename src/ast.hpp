@@ -102,7 +102,7 @@ struct ColumnModifiers
   {};
   struct DefaultValue
   {
-    LiteralValue value;
+    LiteralValue literal;
   };
 
   std::optional<IsNull> is_null;
@@ -117,7 +117,7 @@ inline std::ostream& operator<<(std::ostream& os,
                                 const ColumnModifiers::DefaultValue& def)
 {
   util::OutputManipulator om(os);
-  return os << def.value;
+  return os << def.literal;
 }
 
 inline std::ostream& operator<<(std::ostream& os,
@@ -231,7 +231,7 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::Unique)
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::PrimaryKey)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::DefaultValue,
-                          value)
+                          literal)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers, is_null,
                           not_null, primary_key, auto_increment, unique,
