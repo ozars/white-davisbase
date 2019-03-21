@@ -1,29 +1,11 @@
 #!/bin/bash
-#
-# Adopted from:
-# https://github.com/codecov/example-cpp11-cmake/blob/2036ea/build.sh
 
 set -ex
 
 if [ ! -z "${CLANG_FORMAT:-}" ]; then
-  if [ ! -f ".clang-format" ]; then
-    echo "Couldn't find .clang-format file."
-    exit 1
-  fi
-
-  FILES=`find . -regex '\./\(src\|tests\)/.*\.\(cpp\|hpp\|h\)$'`
-  for FILE in $FILES; do
-    "$CLANG_FORMAT" -i "$FILE"
-  done
-
-  DIRTY=`git ls-files --modified`
-  if [ ! -z "${DIRTY:-}" ]; then
-    echo "clang-format modified some files, printing git-diff:"
-    git --no-pager diff
-    exit 1
-  fi
+  MY_DIR=`dirname "$0"`
+  "$MY_DIR/lint-format.sh"
 fi
-
 
 if [ ! -z "${BUILD:-}" ]; then
 
