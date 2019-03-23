@@ -34,13 +34,13 @@ prepend(DAVISBASE_SOURCE_FILES ${DAVISBASE_SOURCE_DIR} ${DAVISBASE_SOURCE_FILES}
 prepend(TESTS_SOURCE_FILES ${TESTS_SOURCE_DIR} ${TESTS_SOURCE_FILES})
 
 # Add the main executable
-add_executable(davisbase)
+add_executable(davisbase ${DAVISBASE_SOURCE_FILES})
 
 # Add testing executable if enabled
 option (BUILD_TESTING "Build the testing tree." ON)
 if (BUILD_TESTING AND (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR))
   set(TESTING_ENABLED ON)
-  add_executable(tests)
+  add_executable(tests ${TESTS_SOURCE_FILES})
 endif()
 
 # Code coverage configuration. Adopted from:
@@ -68,7 +68,6 @@ if(CODE_COVERAGE)
   target_link_libraries(tests PUBLIC coverage_config)
 endif()
 
-target_sources(davisbase PRIVATE ${DAVISBASE_SOURCE_FILES})
 target_include_directories(davisbase PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(davisbase PUBLIC ${Boost_LIBRARIES} coverage_config)
 
@@ -79,7 +78,6 @@ if (TESTING_ENABLED)
 
     add_dependencies(tests davisbase)
 
-    target_sources(tests PRIVATE ${TESTS_SOURCE_FILES})
     target_include_directories(tests PRIVATE ${Boost_INCLUDE_DIRS})
     target_include_directories(tests PRIVATE "${DAVISBASE_SOURCE_DIR}")
     target_link_libraries(tests PUBLIC Catch2::Catch2 coverage_config)
