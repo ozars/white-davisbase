@@ -6,7 +6,7 @@ A simple SQL database implemented with C++17.
 
 ## Requirements
 
-- CMake 3.5 or newer.
+- CMake 3.8 or newer.
 - A modern C++ compiler supporting C++17 features. g++ 8 or newer works. `<variant>` and `<optional>` headers should be supported without experimental prefix.
 - Boost library. Tests are run with Boost 1.67.
 
