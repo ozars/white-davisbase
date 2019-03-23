@@ -73,10 +73,12 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
   SECTION("Type tests")
   {
 
-    SECTION("Simple case")
+    SECTION("Simple cases")
     {
       CHECK_NOTHROW(parser.parse("CREATE TABLE test (id INT);"));
       CHECK_NOTHROW(parser.parse("CREATE TABLE test(id INT);"));
+      CHECK_NOTHROW(parser.parse("CREATE TABLE test(id int);"));
+      CHECK_NOTHROW(parser.parse("Create Table test(id int);"));
       CHECK_THROWS(parser.parse("CREATE TABLE test (id INT)"));
     }
 
@@ -234,20 +236,30 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
 
     SECTION("Simple cases")
     {
-      auto sql =
-        GENERATE(as<string>{}, "CREATE TABLE test (id INT PRIMARY KEY);",
-                 "CREATE TABLE test (id INT PRIMARY KEY UNIQUE);",
-                 "CREATE TABLE test (id INT NOT NULL NULL);",
-                 "CREATE TABLE test (id INT NULL NOT NULL);",
-                 "CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
-                 "AUTOINCREMENT UNIQUE DEFAULT 3);",
-                 "CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
-                 "AUTOINCREMENT UNIQUE DEFAULT 3.14);",
-                 "CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
-                 "AUTOINCREMENT UNIQUE DEFAULT 'omer');",
-                 "CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
-                 "AUTOINCREMENT UNIQUE DEFAULT \"omer\");");
-      REQUIRE_NOTHROW(parser.parse(sql));
+      REQUIRE_NOTHROW(parser.parse("CREATE TABLE test (id INT PRIMARY KEY);"));
+
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT PRIMARY KEY UNIQUE);"));
+
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NOT NULL NULL);"));
+
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NULL NOT NULL);"));
+
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
+                     "AUTOINCREMENT UNIQUE DEFAULT 3);"));
+
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
+                     "AUTOINCREMENT UNIQUE DEFAULT 3.14);"));
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
+                     "AUTOINCREMENT UNIQUE DEFAULT 'omer');"));
+      REQUIRE_NOTHROW(
+        parser.parse("CREATE TABLE test (id INT NULL NOT NULL PRIMARY KEY "
+                     "AUTOINCREMENT UNIQUE DEFAULT \"omer\");"));
     }
 
     SECTION("Combinations of types and modifiers in one column")
@@ -392,5 +404,44 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         REQUIRE_NOTHROW(get<string>(literal.value) == "omer");
       }
     }
+  }
+}
+
+TEST_CASE("Parse inserting into table", "[parser][insert_into]")
+{
+  using white::davisbase::ast::ColumnType;
+  using white::davisbase::ast::InsertIntoCommand;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(1);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES('omer');"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(3.14);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(3);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(\"omer\");"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES('omer');"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES('\\'quoted\\'');"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES('\\\"quoted\\\"');"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(1, 2);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(1,2);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test VALUES(1, 2, 3,4);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test(col1) VALUES(1);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test (col1) VALUES(1);"));
+    REQUIRE_NOTHROW(
+      parser.parse("INSERT INTO test (col1, col2) VALUES(1, 2);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test (col1,col2) VALUES(1, 2);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test (col1,col2) VALUES(1,2);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test (col1) VALUES(1, 2, 3);"));
+    REQUIRE_NOTHROW(parser.parse("INSERT INTO test (col1) VALUES(1, 2,3);"));
+
+    REQUIRE_THROWS(parser.parse("INSERT INTO test VALUES();"));
+    REQUIRE_THROWS(parser.parse("INSERT INTO test() VALUES;"));
+    REQUIRE_THROWS(parser.parse("INSERT INTO test() VALUES();"));
+    REQUIRE_THROWS(parser.parse("INSERT INTO test () VALUES();"));
+    REQUIRE_THROWS(parser.parse("INSERT INTO test (col1) VALUES();"));
+    REQUIRE_THROWS(parser.parse("INSERT INTO test () VALUES(1);"));
   }
 }
