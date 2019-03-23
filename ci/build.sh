@@ -2,12 +2,12 @@
 
 set -ex
 
-if [ ! -z "${CLANG_FORMAT:-}" ]; then
-  MY_DIR=`dirname "$0"`
+if [ ! -z "${CLANG_FORMAT}" ]; then
+  MY_DIR=$(dirname "$0")
   "$MY_DIR/lint-format.sh"
 fi
 
-if [ ! -z "${BUILD:-}" ]; then
+if [ ! -z "${BUILD}" ]; then
 
   if [ "$BUILD" == "debug" ]; then
     CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DCODE_COVERAGE=ON"

@@ -13,7 +13,7 @@ A simple SQL database implemented with C++17.
 
 ## Compiling
 
-```
+```console
 $ git clone --recursive https://github.com/ozars/white-davisbase
 $ cd white-database
 $ mkdir build
@@ -24,7 +24,7 @@ $ ./davisbase
 
 or using Docker:
 
-```
+```console
 $ git clone --recursive https://github.com/ozars/white-davisbase
 $ cd white-database
 $ sudo docker build -t davisbase .
@@ -35,12 +35,12 @@ $ sudo docker run -it bin/davisbase
 
 After compiling:
 
-```
+```console
 $ ctest --output-on-failure
 ```
 
 or using Docker:
 
-```
+```console
 $ sudo docker run -it ctest --output-on-failure
 ```

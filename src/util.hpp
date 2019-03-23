@@ -8,7 +8,7 @@ namespace white::util {
 class OutputManipulator
 {
 public:
-  OutputManipulator(std::ostream& stream)
+  explicit OutputManipulator(std::ostream& stream)
     : stream_(stream)
     , old_flags_(stream_.flags())
   {

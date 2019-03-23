@@ -2,7 +2,7 @@
 
 set -ex
 
-if [ ! -z "${GCOV:-}" ]; then
+if [ ! -z "${GCOV}" ]; then
   # Create lcov report
   # capture coverage info
   lcov --gcov-tool "$GCOV" --directory . --capture --output-file coverage.info
