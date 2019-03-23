@@ -45,6 +45,11 @@ matrix:
             key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
         packages:
           - clang-format-8
+  - name: "Docker Container"
+    os: linux
+    env: DOCKER=1
+    services:
+    - docker
 
 before_install:
   - |

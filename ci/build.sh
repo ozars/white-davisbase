@@ -24,3 +24,8 @@ if [ ! -z "${BUILD:-}" ]; then
   # Test
   ctest -j $(nproc) --output-on-failure
 fi
+
+if [ ! -z "$DOCKER" ]; then
+  docker build -t davisbase .
+  docker run -it davisbase ctest --output-on-failure
+fi
