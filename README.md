@@ -1,4 +1,5 @@
 # white-davisbase
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f39afd2b28d14b4d8a2008687913d692)](https://app.codacy.com/app/ozars/white-davisbase?utm_source=github.com&utm_medium=referral&utm_content=ozars/white-davisbase&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/ozars/white-davisbase.svg?branch=master)](https://travis-ci.org/ozars/white-davisbase)
 [![codecov](https://codecov.io/gh/ozars/white-davisbase/branch/master/graph/badge.svg)](https://codecov.io/gh/ozars/white-davisbase)
 
