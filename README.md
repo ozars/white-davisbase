@@ -1,6 +1,7 @@
 # white-davisbase
 [![Build Status](https://travis-ci.org/ozars/white-davisbase.svg?branch=master)](https://travis-ci.org/ozars/white-davisbase)
 [![codecov](https://codecov.io/gh/ozars/white-davisbase/branch/master/graph/badge.svg)](https://codecov.io/gh/ozars/white-davisbase)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a6e2be8a68384dd6ac23734ad6b3dc0f)](https://www.codacy.com/app/ozars/white-davisbase)
 
 A simple SQL database implemented with C++17.
 
@@ -21,9 +22,25 @@ $ cmake ../ && make && cd bin
 $ ./davisbase
 ```
 
-## Testing
+or using Docker:
 
 ```
-$ make tests
+$ git clone --recursive https://github.com/ozars/white-davisbase
+$ cd white-database
+$ sudo docker build -t davisbase .
+$ sudo docker run -it bin/davisbase
+```
+
+## Testing
+
+After compiling:
+
+```
 $ ctest --output-on-failure
+```
+
+or using Docker:
+
+```
+$ sudo docker run -it ctest --output-on-failure
 ```
