@@ -28,7 +28,7 @@ or using Docker:
 $ git clone --recursive https://github.com/ozars/white-davisbase
 $ cd white-database
 $ sudo docker build -t davisbase .
-$ sudo docker run -it bin/davisbase
+$ sudo docker run -it davisbase bin/davisbase
 ```
 
 ## Testing
@@ -42,5 +42,5 @@ $ ctest --output-on-failure
 or using Docker:
 
 ```console
-$ sudo docker run -it ctest --output-on-failure
+$ sudo docker run -it davisbase ctest --output-on-failure
 ```
