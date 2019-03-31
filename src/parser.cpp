@@ -181,11 +181,13 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, Command(), Skipper> command;
 };
 
+using StringQueryGrammar = QueryGrammar<std::string::const_iterator>;
+
 struct Parser::impl
 {
   Command parse(const string& cmd);
 
-  QueryGrammar<std::string::const_iterator> grammar;
+  StringQueryGrammar grammar;
 };
 
 Command Parser::impl::parse(const string& cmd)
