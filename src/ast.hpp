@@ -154,6 +154,20 @@ inline std::ostream& operator<<(std::ostream& os, const Column& column)
             << ", modifiers=" << column.modifiers << ")";
 }
 
+struct WhereClause
+{
+  std::string column_name;
+  OperatorType op;
+  LiteralValue literal;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const WhereClause& where)
+{
+  util::OutputManipulator om(os);
+  return os << "WhereClause(table_name=\"" << where.column_name
+            << "\", op=" << where.op << ", literal=" << where.literal << ")";
+}
+
 struct ShowTablesCommand
 {
   void execute();
@@ -253,5 +267,8 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers, is_null,
                           default_value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::Column, name, type, modifiers)
+
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::WhereClause, column_name, op,
+                          literal)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::LiteralValue, value)
