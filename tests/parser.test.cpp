@@ -445,3 +445,60 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
     REQUIRE_THROWS(parser.parse("INSERT INTO test () VALUES(1);"));
   }
 }
+
+TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
+{
+  using white::davisbase::ast::OperatorType;
+  using white::davisbase::ast::WhereClause;
+  using white::davisbase::parser::StringQueryGrammar;
+  using white::util::test_phrase_parser_attr;
+
+  StringQueryGrammar grammar;
+  WhereClause where;
+
+  REQUIRE(test_phrase_parser_attr("WHERE col1 = 5", grammar.where, where));
+  CHECK(where.column_name == "col1");
+  CHECK(where.op == OperatorType::EQUAL);
+  CHECK(get<long long>(where.literal.value) == 5);
+
+  where = WhereClause();
+  REQUIRE(test_phrase_parser_attr("WHERE col2 < \"5\"", grammar.where, where));
+  CHECK(where.column_name == "col2");
+  CHECK(where.op == OperatorType::LESS);
+  CHECK(get<std::string>(where.literal.value) == "5");
+
+  where = WhereClause();
+  REQUIRE(test_phrase_parser_attr("WHERE col3 <= 4.5", grammar.where, where));
+  CHECK(where.column_name == "col3");
+  CHECK(where.op == OperatorType::LESS_EQUAL);
+  CHECK(get<long double>(where.literal.value) == 4.5L);
+
+  where = WhereClause();
+  REQUIRE(
+    test_phrase_parser_attr("WHERE col4 > 'harambe'", grammar.where, where));
+  CHECK(where.column_name == "col4");
+  CHECK(where.op == OperatorType::GREATER);
+  CHECK(get<std::string>(where.literal.value) == "harambe");
+
+  where = WhereClause();
+  long long big_number = 0x1FFFFFFFFFFFFFFF;
+  REQUIRE(test_phrase_parser_attr("WHERE col5 >= " + std::to_string(big_number),
+                                  grammar.where, where));
+  CHECK(where.column_name == "col5");
+  CHECK(where.op == OperatorType::GREATER_EQUAL);
+  CHECK(get<long long>(where.literal.value) == big_number);
+
+  where = WhereClause();
+  REQUIRE(test_phrase_parser_attr(
+    "WHERE col6 >= " + std::to_string(-big_number), grammar.where, where));
+  CHECK(where.column_name == "col6");
+  CHECK(where.op == OperatorType::GREATER_EQUAL);
+  CHECK(get<long long>(where.literal.value) == -big_number);
+
+  REQUIRE_FALSE(
+    test_phrase_parser_attr("WHERE col > harambe", grammar.where, where));
+  REQUIRE_FALSE(test_phrase_parser_attr(
+    "WHERE col > 999999999999999999999999999", grammar.where, where));
+  REQUIRE_FALSE(test_phrase_parser_attr("WHERE col", grammar.where, where));
+  REQUIRE_FALSE(test_phrase_parser_attr("WHERE true", grammar.where, where));
+}

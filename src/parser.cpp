@@ -19,6 +19,7 @@ using ast::ColumnModifiers;
 using ast::ColumnType;
 using ast::LiteralValue;
 using ast::OperatorType;
+using ast::WhereClause;
 
 template<typename TStr>
 constexpr auto Q(TStr&& str)
@@ -164,7 +165,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, ColumnModifiers(), Skipper> column_modifiers;
 
   qi::rule<Iterator, Column(), Skipper> column;
-  qi::rule<Iterator, Skipper> where;
+  qi::rule<Iterator, WhereClause(), Skipper> where;
 
   qi::rule<Iterator, ShowTablesCommand(), Skipper> show_tables;
   qi::rule<Iterator, CreateTableCommand(), Skipper> create_table;
