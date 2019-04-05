@@ -1,7 +1,7 @@
 # white-davisbase
 [![Build Status](https://travis-ci.org/ozars/white-davisbase.svg?branch=master)](https://travis-ci.org/ozars/white-davisbase)
 [![codecov](https://codecov.io/gh/ozars/white-davisbase/branch/master/graph/badge.svg)](https://codecov.io/gh/ozars/white-davisbase)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a6e2be8a68384dd6ac23734ad6b3dc0f)](https://www.codacy.com/app/ozars/white-davisbase)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a6e2be8a68384dd6ac23734ad6b3dc0f)](https://www.codacy.com/app/ozars/white-davisbase) [![Join the chat at https://gitter.im/white-davisbase/community](https://badges.gitter.im/white-davisbase/community.svg)](https://gitter.im/white-davisbase/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 A simple SQL database implemented with C++17.
 
