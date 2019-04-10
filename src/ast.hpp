@@ -142,7 +142,6 @@ inline std::ostream& operator<<(std::ostream& os,
 
 struct Column
 {
-  Column(){}
   std::string name;
   ColumnType type;
   ColumnModifiers modifiers;
