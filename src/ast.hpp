@@ -142,6 +142,7 @@ inline std::ostream& operator<<(std::ostream& os,
 
 struct Column
 {
+  Column(){}
   std::string name;
   ColumnType type;
   ColumnModifiers modifiers;
@@ -264,12 +265,29 @@ inline std::ostream& operator<<(std::ostream& os, const DeleteFromCommand& cmd)
   return os << ")";
 }
 
+struct UpdateTableCommand
+{
+  void execute();
+
+  std::string table_name;
+  ast::Column column_name;
+  ast::LiteralValue value;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const UpdateTableCommand& cmd)
+{
+  util::OutputManipulator om(os);
+  return os << "UpdateTableCommand(table_name=\"" << cmd.table_name
+            << "\", column_name=" << cmd.column_name
+            << ", value=" << cmd.value << ")";
+}
+
 struct Command
 {
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand, SelectCommand, DeleteFromCommand>
+               InsertIntoCommand, SelectCommand, DeleteFromCommand, UpdateTableCommand>
     command;
 };
 
@@ -292,6 +310,8 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DeleteFromCommand, table_name,
                           condition)
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateTableCommand, table_name,
+                          column_name, value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 
