@@ -12,7 +12,7 @@ using ast::Command;
 using ast::CreateTableCommand;
 using ast::DropTableCommand;
 using ast::InsertIntoCommand;
-using ast::UpdateTableCommand;
+using ast::UpdateCommand;
 using ast::ShowTablesCommand;
 
 using ast::Column;
@@ -176,7 +176,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, Skipper> create_index;
 
   qi::rule<Iterator, InsertIntoCommand(), Skipper> insert_into;
-  qi::rule<Iterator, UpdateTableCommand(), Skipper> update;
+  qi::rule<Iterator, UpdateCommand(), Skipper> update;
 
   qi::rule<Iterator, Skipper> delete_from;
   qi::rule<Iterator, Skipper> select;

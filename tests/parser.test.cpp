@@ -446,6 +446,33 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
   }
 }
 
+TEST_CASE("Parse updating a table", "[parser][update]")
+{
+  using white::davisbase::ast::ColumnType;
+  using white::davisbase::ast::UpdateCommand;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("update test set test_column='abc'"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=292"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=3.14"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column='nk12'"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column='\'3.14'"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=1 where test_row=1"));
+
+    REQUIRE_THROWS(parser.parse("update test set column=2,3"));
+    REQUIRE_THROWS(parser.parse("update test sets column=2"));
+    REQUIRE_THROWS(parser.parse("update test set() column=1"));
+    REQUIRE_THROWS(parser.parse("update test set column()=1"));
+    REQUIRE_THROWS(parser.parse("update table abc set column=1"));
+    REQUIRE_THROWS(parser.parse("update set column=1"));
+    REQUIRE_THROWS(parser.parse("update test set column=1 where row1='abc' and row2='mnp'"));
+  }
+}
+
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
   using white::davisbase::ast::OperatorType;

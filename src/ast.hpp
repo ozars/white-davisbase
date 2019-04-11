@@ -217,12 +217,12 @@ struct InsertIntoCommand
   std::vector<LiteralValue> values;
 };
              
-struct UpdateTableCommand
+struct UpdateCommand
 {
   void execute();
 
   std::string table_name;
-  ast::Column column_name;
+  std::string column_name;
   ast::LiteralValue value;
 };
 
@@ -235,7 +235,7 @@ inline std::ostream& operator<<(std::ostream& os, const InsertIntoCommand& cmd)
             << "], values=[" << join(cmd.values, ", ") << "])";
 }
 
-inline std::ostream& operator<<(std::ostream& os, const UpdateTableCommand& cmd)
+inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
 {
   util::OutputManipulator om(os);
   return os << "UpdateTableCommand(table_name=\"" << cmd.table_name
@@ -248,7 +248,7 @@ struct Command
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand, UpdateTableCommand>
+               InsertIntoCommand, UpdateCommand>
     command;
 };
 
@@ -266,7 +266,7 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
 
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateTableCommand, table_name,
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
                           column_name, value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
