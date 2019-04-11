@@ -39,7 +39,7 @@ void DeleteFromCommand::execute()
   std::cout << *this << std::endl;
 }
 
-void UpdateTableCommand::execute()
+void UpdateCommand::execute()
 {
   std::cout << *this << std::endl;
 }

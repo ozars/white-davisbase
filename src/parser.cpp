@@ -14,7 +14,7 @@ using ast::DeleteFromCommand;
 using ast::DropTableCommand;
 using ast::InsertIntoCommand;
 using ast::SelectCommand;
-using ast::UpdateTableCommand;
+using ast::UpdateCommand;
 using ast::ShowTablesCommand;
 
 using ast::Column;
@@ -183,8 +183,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, DeleteFromCommand(), Skipper> delete_from;
 
   qi::rule<Iterator, SelectCommand(), Skipper> select;
-
-  qi::rule<Iterator, UpdateTableCommand(), Skipper> update;
+  qi::rule<Iterator, UpdateCommand(), Skipper> update;
   qi::rule<Iterator, Skipper> exit;
 
   qi::rule<Iterator, Command(), Skipper> command;

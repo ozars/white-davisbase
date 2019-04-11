@@ -264,21 +264,25 @@ inline std::ostream& operator<<(std::ostream& os, const DeleteFromCommand& cmd)
   return os << ")";
 }
 
-struct UpdateTableCommand
+struct UpdateCommand
 {
   void execute();
 
   std::string table_name;
-  ast::Column column_name;
+  std::string column_name;
   ast::LiteralValue value;
+  std::optional<WhereClause> condition;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const UpdateTableCommand& cmd)
+inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
 {
   util::OutputManipulator om(os);
-  return os << "UpdateTableCommand(table_name=\"" << cmd.table_name
+  os << "UpdateTableCommand(table_name=\"" << cmd.table_name
             << "\", column_name=" << cmd.column_name
-            << ", value=" << cmd.value << ")";
+            << ", value=" << cmd.value;
+  if (cmd.condition.has_value())
+    os << ", condition=" << cmd.condition.value();
+  return os << ")";
 }
 
 struct Command
@@ -286,7 +290,7 @@ struct Command
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand, SelectCommand, DeleteFromCommand, UpdateTableCommand>
+               InsertIntoCommand, SelectCommand, DeleteFromCommand, UpdateCommand>
     command;
 };
 
@@ -304,12 +308,16 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
 
+<<<<<<< HEAD
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
                           table_name, condition)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DeleteFromCommand, table_name,
                           condition)
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateTableCommand, table_name,
+=======
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
+>>>>>>> Implement review comments and add test cases for update
                           column_name, value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
