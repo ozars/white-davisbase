@@ -446,6 +446,131 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
   }
 }
 
+TEST_CASE("Parse select from table", "[parser][select]")
+{
+  using white::davisbase::ast::OperatorType;
+  using white::davisbase::ast::SelectCommand;
+  using white::davisbase::ast::WhereClause;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol1, tcol2 FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test WHERE tcol > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol FROM test WHERE tcol > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol1 FROM test WHERE tcol2 > 3.14;"));
+    REQUIRE_NOTHROW(
+      parser.parse("SELECT tcol1, tcol2 FROM test WHERE tcol3 > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test WHERE tcol = \"viraj\";"));
+
+    REQUIRE_THROWS(parser.parse("SELECT (tcol) FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test();"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE 20 < tcol;"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE tcol < ()20;"));
+    REQUIRE_THROWS(parser.parse("SELECT (tcol) FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(
+      parser.parse("SELECT tcol() FROM test() WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test WHERE tcol < ()20;"));
+  }
+
+  SECTION("Parsed content")
+  {
+    SelectCommand actual_cmd;
+
+    SECTION("Select all columns")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("SELECT * FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      CHECK_FALSE(actual_cmd.condition.has_value());
+    }
+
+    SECTION("Select all columns with where")
+    {
+      WhereClause where;
+
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("SELECT * FROM test WHERE tcol > 3.14;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "tcol");
+      CHECK(where.op == OperatorType::GREATER);
+      REQUIRE(holds_alternative<long double>(where.literal.value));
+      REQUIRE_NOTHROW(get<long double>(where.literal.value) == 3.14L);
+    }
+
+    SECTION("Select one column")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("SELECT tcol1 FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK_FALSE(actual_cmd.condition.has_value());
+
+      REQUIRE(actual_cmd.column_names.size() == 1);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+    }
+
+    SECTION("Select some columns")
+    {
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("SELECT tcol1, tcol2 FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK_FALSE(actual_cmd.condition.has_value());
+
+      REQUIRE(actual_cmd.column_names.size() == 2);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+      CHECK(actual_cmd.column_names[1] == "tcol2");
+    }
+
+    SECTION("Select some columns with where")
+    {
+      WhereClause where;
+
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "SELECT tcol1, tcol2 FROM test WHERE tcol > 3.14;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 2);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+      CHECK(actual_cmd.column_names[1] == "tcol2");
+
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "tcol");
+      CHECK(where.op == OperatorType::GREATER);
+      REQUIRE(holds_alternative<long double>(where.literal.value));
+      REQUIRE_NOTHROW(get<long double>(where.literal.value) == 3.14L);
+    }
+  }
+}
+
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
   using white::davisbase::ast::OperatorType;

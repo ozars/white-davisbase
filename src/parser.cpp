@@ -12,6 +12,7 @@ using ast::Command;
 using ast::CreateTableCommand;
 using ast::DropTableCommand;
 using ast::InsertIntoCommand;
+using ast::SelectCommand;
 using ast::ShowTablesCommand;
 
 using ast::Column;
@@ -137,12 +138,13 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
     /* VDL */
 
-    select =
-      no_case["SELECT"] >> '*' >> no_case["FROM"] >> table_name >> -where;
+    select = no_case["SELECT"] >> (lit('*') | (column_name % ',')) >>
+             no_case["FROM"] >> table_name >> -where;
 
     /* Main command */
 
-    command = (show_tables | drop_table | create_table | insert_into) >> ';';
+    command =
+      (show_tables | drop_table | create_table | insert_into | select) >> ';';
   }
 
   qi::rule<Iterator, string()> identifier;
@@ -174,9 +176,10 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
   qi::rule<Iterator, InsertIntoCommand(), Skipper> insert_into;
 
+  qi::rule<Iterator, SelectCommand(), Skipper> select;
+
   qi::rule<Iterator, Skipper> delete_from;
   qi::rule<Iterator, Skipper> update;
-  qi::rule<Iterator, Skipper> select;
   qi::rule<Iterator, Skipper> exit;
 
   qi::rule<Iterator, Command(), Skipper> command;
