@@ -29,4 +29,9 @@ void InsertIntoCommand::execute()
   std::cout << *this << std::endl;
 }
 
+void SelectCommand::execute()
+{
+  std::cout << *this << std::endl;
+}
+
 } // namespace white::davisbase::ast

@@ -226,12 +226,32 @@ inline std::ostream& operator<<(std::ostream& os, const InsertIntoCommand& cmd)
             << "], values=[" << join(cmd.values, ", ") << "])";
 }
 
+struct SelectCommand
+{
+  void execute();
+
+  std::vector<std::string> column_names;
+  std::string table_name;
+  std::optional<WhereClause> condition;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const SelectCommand& cmd)
+{
+  using util::join;
+  util::OutputManipulator om(os);
+  os << "SelectCommand(table_name=\"" << cmd.table_name << "\", column_names=["
+     << join(cmd.column_names, ", ") << "]";
+  if (cmd.condition.has_value())
+    os << ", condition=" << cmd.condition.value();
+  return os << ")";
+}
+
 struct Command
 {
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand>
+               InsertIntoCommand, SelectCommand>
     command;
 };
 
@@ -248,6 +268,9 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
+
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
+                          table_name, condition)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 
