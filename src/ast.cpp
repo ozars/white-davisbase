@@ -34,4 +34,9 @@ void SelectCommand::execute()
   std::cout << *this << std::endl;
 }
 
+void DeleteFromCommand::execute()
+{
+  std::cout << *this << std::endl;
+}
+
 } // namespace white::davisbase::ast

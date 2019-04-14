@@ -655,6 +655,69 @@ TEST_CASE("Parse select from table", "[parser][select]")
   }
 }
 
+TEST_CASE("Parse delete from table", "[parser][delete_from]")
+{
+  using white::davisbase::ast::DeleteFromCommand;
+  using white::davisbase::ast::OperatorType;
+  using white::davisbase::ast::WhereClause;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("Delete From test;"));
+    REQUIRE_NOTHROW(parser.parse("delete from test;"));
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test WHERE col1 = 5;"));
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test WHERE col2 < \"5\";"));
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test WHERE col3 <= 4.5;"));
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test WHERE col4 > 'harambe';"));
+    REQUIRE_NOTHROW(parser.parse("DELETE FROM test WHERE col1 = 'haramble';"));
+
+    REQUIRE_THROWS(parser.parse("DELETE FROM test"));
+    REQUIRE_THROWS(parser.parse("DELETE tcol FROM test;"));
+    REQUIRE_THROWS(parser.parse("DELETE (tcol) FROM test();"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test();"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM table test;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM TABLE test;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test WHERE col1 == 5;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test WHERE col3 is equal 4.5;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test WHERE col1;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test WHERE;"));
+    REQUIRE_THROWS(parser.parse("DELETE FROM test WHERE col1;"));
+  }
+
+  SECTION("Parsed content")
+  {
+    DeleteFromCommand actual_cmd;
+
+    SECTION("Without where clause")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("DELETE FROM test;"));
+      REQUIRE_NOTHROW(actual_cmd = get<DeleteFromCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "test");
+      CHECK_FALSE(actual_cmd.condition.has_value());
+    }
+
+    SECTION("With where clause")
+    {
+      WhereClause where;
+
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("DELETE FROM test WHERE col1 = 3.14;"));
+      REQUIRE_NOTHROW(actual_cmd = get<DeleteFromCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "test");
+      REQUIRE(actual_cmd.condition.has_value());
+
+      where = actual_cmd.condition.value();
+      CHECK(where.column_name == "col1");
+      CHECK(where.op == OperatorType::EQUAL);
+      REQUIRE_NOTHROW(get<long double>(where.literal.value) == 3.14L);
+    }
+  }
+}
+
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
   using white::davisbase::ast::OperatorType;
