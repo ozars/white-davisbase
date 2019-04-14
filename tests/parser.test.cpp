@@ -444,6 +444,90 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
     REQUIRE_THROWS(parser.parse("INSERT INTO test (col1) VALUES();"));
     REQUIRE_THROWS(parser.parse("INSERT INTO test () VALUES(1);"));
   }
+
+  SECTION("Parsed content")
+  {
+    InsertIntoCommand actual_cmd;
+
+    SECTION("One value")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("INSERT INTO test VALUES(1);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      REQUIRE(actual_cmd.values.size() == 1);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+    }
+
+    SECTION("Multiple values")
+    {
+      REQUIRE_NOTHROW(
+        parsed_cmd = parser.parse("INSERT INTO test VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+
+    SECTION("Single column")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "INSERT INTO test (col1) VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 1);
+      REQUIRE(actual_cmd.column_names[0] == "col1");
+
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+    SECTION("Multiple columns")
+    {
+      REQUIRE_NOTHROW(
+        parsed_cmd = parser.parse(
+          "INSERT INTO test (col1, col2, col3) VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 3);
+      REQUIRE(actual_cmd.column_names[0] == "col1");
+      REQUIRE(actual_cmd.column_names[1] == "col2");
+      REQUIRE(actual_cmd.column_names[2] == "col3");
+
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+  }
 }
 
 TEST_CASE("Parse select from table", "[parser][select]")
