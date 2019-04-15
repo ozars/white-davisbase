@@ -224,6 +224,7 @@ struct UpdateCommand
   std::string table_name;
   std::string column_name;
   ast::LiteralValue value;
+  std::optional<WhereClause> condition;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const InsertIntoCommand& cmd)
@@ -238,9 +239,32 @@ inline std::ostream& operator<<(std::ostream& os, const InsertIntoCommand& cmd)
 inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
 {
   util::OutputManipulator om(os);
-  return os << "UpdateTableCommand(table_name=\"" << cmd.table_name
+  os << "UpdateTableCommand(table_name=\"" << cmd.table_name
             << "\", column_name=" << cmd.column_name
-            << ", value=" << cmd.value << ")";
+            << ", value=" << cmd.value;
+  if (cmd.condition.has_value())
+    os << ", condition=" << cmd.condition.value();
+  return os << ")";
+}
+
+struct SelectCommand
+{
+  void execute();
+
+  std::vector<std::string> column_names;
+  std::string table_name;
+  std::optional<WhereClause> condition;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const SelectCommand& cmd)
+{
+  using util::join;
+  util::OutputManipulator om(os);
+  os << "SelectCommand(table_name=\"" << cmd.table_name << "\", column_names=["
+     << join(cmd.column_names, ", ") << "]";
+  if (cmd.condition.has_value())
+    os << ", condition=" << cmd.condition.value();
+  return os << ")";
 }
 
 struct Command
@@ -248,7 +272,8 @@ struct Command
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand, UpdateCommand>
+               InsertIntoCommand, UpdateCommand, SelectCommand>
+
     command;
 };
 
@@ -267,7 +292,9 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
-                          column_name, value)
+                          column_name, value, condition)
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
+                          table_name, condition)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 

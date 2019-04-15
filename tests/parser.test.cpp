@@ -444,32 +444,280 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
     REQUIRE_THROWS(parser.parse("INSERT INTO test (col1) VALUES();"));
     REQUIRE_THROWS(parser.parse("INSERT INTO test () VALUES(1);"));
   }
+
+  SECTION("Parsed content")
+  {
+    InsertIntoCommand actual_cmd;
+
+    SECTION("One value")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("INSERT INTO test VALUES(1);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      REQUIRE(actual_cmd.values.size() == 1);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+    }
+
+    SECTION("Multiple values")
+    {
+      REQUIRE_NOTHROW(
+        parsed_cmd = parser.parse("INSERT INTO test VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+
+    SECTION("Single column")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "INSERT INTO test (col1) VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 1);
+      REQUIRE(actual_cmd.column_names[0] == "col1");
+
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+    SECTION("Multiple columns")
+    {
+      REQUIRE_NOTHROW(
+        parsed_cmd = parser.parse(
+          "INSERT INTO test (col1, col2, col3) VALUES(1, 'omer', 3.14);"));
+
+      REQUIRE(holds_alternative<InsertIntoCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<InsertIntoCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 3);
+      REQUIRE(actual_cmd.column_names[0] == "col1");
+      REQUIRE(actual_cmd.column_names[1] == "col2");
+      REQUIRE(actual_cmd.column_names[2] == "col3");
+
+      REQUIRE(actual_cmd.values.size() == 3);
+      REQUIRE(holds_alternative<long long>(actual_cmd.values[0].value));
+      REQUIRE_NOTHROW(get<long long>(actual_cmd.values[0].value) == 1L);
+      REQUIRE(holds_alternative<string>(actual_cmd.values[1].value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.values[1].value) == "omer");
+      REQUIRE(holds_alternative<long double>(actual_cmd.values[2].value));
+      REQUIRE_NOTHROW(get<long double>(actual_cmd.values[2].value) == 3.14L);
+    }
+  }
 }
 
-TEST_CASE("Parse updating a table", "[parser][update]")
+TEST_CASE("Parse select from table", "[parser][select]")
 {
-  using white::davisbase::ast::ColumnType;
-  using white::davisbase::ast::UpdateCommand;
+  using white::davisbase::ast::OperatorType;
+  using white::davisbase::ast::SelectCommand;
+  using white::davisbase::ast::WhereClause;
 
   Parser parser;
   Command parsed_cmd;
 
   SECTION("Simple cases")
   {
-    REQUIRE_NOTHROW(parser.parse("update test set test_column='abc'"));
-    REQUIRE_NOTHROW(parser.parse("update test set test_column=292"));
-    REQUIRE_NOTHROW(parser.parse("update test set test_column=3.14"));
-    REQUIRE_NOTHROW(parser.parse("update test set test_column='nk12'"));
-    REQUIRE_NOTHROW(parser.parse("update test set test_column='\'3.14'"));
-    REQUIRE_NOTHROW(parser.parse("update test set test_column=1 where test_row=1"));
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol1, tcol2 FROM test;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test WHERE tcol > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol FROM test WHERE tcol > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT tcol1 FROM test WHERE tcol2 > 3.14;"));
+    REQUIRE_NOTHROW(
+      parser.parse("SELECT tcol1, tcol2 FROM test WHERE tcol3 > 3.14;"));
+    REQUIRE_NOTHROW(parser.parse("SELECT * FROM test WHERE tcol = \"viraj\";"));
 
-    REQUIRE_THROWS(parser.parse("update test set column=2,3"));
-    REQUIRE_THROWS(parser.parse("update test sets column=2"));
-    REQUIRE_THROWS(parser.parse("update test set() column=1"));
-    REQUIRE_THROWS(parser.parse("update test set column()=1"));
-    REQUIRE_THROWS(parser.parse("update table abc set column=1"));
-    REQUIRE_THROWS(parser.parse("update set column=1"));
-    REQUIRE_THROWS(parser.parse("update test set column=1 where row1='abc' and row2='mnp'"));
+    REQUIRE_THROWS(parser.parse("SELECT (tcol) FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test();"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test;"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE 20 < tcol;"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT () FROM test WHERE tcol < ()20;"));
+    REQUIRE_THROWS(parser.parse("SELECT (tcol) FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test WHERE tcol < (20);"));
+    REQUIRE_THROWS(
+      parser.parse("SELECT tcol() FROM test() WHERE tcol < (20);"));
+    REQUIRE_THROWS(parser.parse("SELECT tcol() FROM test WHERE tcol < ()20;"));
+  }
+
+  SECTION("Parsed content")
+  {
+    SelectCommand actual_cmd;
+
+    SECTION("Select all columns")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("SELECT * FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+      CHECK_FALSE(actual_cmd.condition.has_value());
+    }
+
+    SECTION("Select all columns with where")
+    {
+      WhereClause where;
+
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("SELECT * FROM test WHERE tcol > 3.14;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK(actual_cmd.column_names.size() == 0);
+
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "tcol");
+      CHECK(where.op == OperatorType::GREATER);
+      REQUIRE(holds_alternative<long double>(where.literal.value));
+      REQUIRE_NOTHROW(get<long double>(where.literal.value) == 3.14L);
+    }
+
+    SECTION("Select one column")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("SELECT tcol1 FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK_FALSE(actual_cmd.condition.has_value());
+
+      REQUIRE(actual_cmd.column_names.size() == 1);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+    }
+
+    SECTION("Select some columns")
+    {
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("SELECT tcol1, tcol2 FROM test;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+      CHECK_FALSE(actual_cmd.condition.has_value());
+
+      REQUIRE(actual_cmd.column_names.size() == 2);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+      CHECK(actual_cmd.column_names[1] == "tcol2");
+    }
+
+    SECTION("Select some columns with where")
+    {
+      WhereClause where;
+
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "SELECT tcol1, tcol2 FROM test WHERE tcol > 3.14;"));
+      REQUIRE(holds_alternative<SelectCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<SelectCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test");
+
+      REQUIRE(actual_cmd.column_names.size() == 2);
+      CHECK(actual_cmd.column_names[0] == "tcol1");
+      CHECK(actual_cmd.column_names[1] == "tcol2");
+
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "tcol");
+      CHECK(where.op == OperatorType::GREATER);
+      REQUIRE(holds_alternative<long double>(where.literal.value));
+      REQUIRE_NOTHROW(get<long double>(where.literal.value) == 3.14L);
+    }
+  }
+}
+
+TEST_CASE("Parse updating a table", "[parser][update]")
+{
+  using white::davisbase::ast::ColumnType;
+  using white::davisbase::ast::UpdateCommand;
+  using white::davisbase::ast::WhereClause;
+  using white::davisbase::ast::OperatorType;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=\"abc\";"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=292;"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=3.14;"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column='nk12';"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=1 where test_row=1;"));
+
+    REQUIRE_THROWS(parser.parse("update test set test_column='\'3.14';"));
+    REQUIRE_THROWS(parser.parse("update test set column=2,3;"));
+    REQUIRE_THROWS(parser.parse("update test sets column=2;"));
+    REQUIRE_THROWS(parser.parse("update test set() column=1;"));
+    REQUIRE_THROWS(parser.parse("update test set column()=1;"));
+    REQUIRE_THROWS(parser.parse("update table abc set column=1;"));
+    REQUIRE_THROWS(parser.parse("update set column=1;"));
+    REQUIRE_THROWS(parser.parse("update test set column=1 where row1='abc' and row2='mnp';"));
+  }
+    SECTION("Parsed content")
+  {
+    UpdateCommand actual_cmd;
+
+    SECTION("Without where clause")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("update test_table set test_column='test_value';"));
+      REQUIRE(holds_alternative<UpdateCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<UpdateCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "test_table");
+      CHECK(actual_cmd.column_name == "test_column");
+      REQUIRE(holds_alternative<string>(actual_cmd.value.value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.value.value) == "test_value");
+    }
+
+    SECTION("With where clause")
+    {
+      WhereClause where;
+      REQUIRE_NOTHROW(
+        parsed_cmd = parser.parse("update test_table set test_column='test_value' where test_col='abc';"));
+
+      REQUIRE(holds_alternative<UpdateCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<UpdateCommand>(parsed_cmd.command));
+
+      CHECK(actual_cmd.table_name == "test_table");
+      CHECK(actual_cmd.column_name == "test_column");
+      REQUIRE(holds_alternative<string>(actual_cmd.value.value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.value.value) == "test_value");
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "test_col");
+      CHECK(where.op == OperatorType::EQUAL);
+      REQUIRE(holds_alternative<string>(where.literal.value));
+      REQUIRE_NOTHROW(get<string>(where.literal.value) == "abc");
+    }
   }
 }
 
