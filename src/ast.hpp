@@ -164,7 +164,7 @@ struct WhereClause
 inline std::ostream& operator<<(std::ostream& os, const WhereClause& where)
 {
   util::OutputManipulator om(os);
-  return os << "WhereClause(table_name=\"" << where.column_name
+  return os << "WhereClause(column_name=\"" << where.column_name
             << "\", op=" << where.op << ", literal=" << where.literal << ")";
 }
 
@@ -258,7 +258,7 @@ inline std::ostream& operator<<(std::ostream& os, const DeleteFromCommand& cmd)
 {
   using util::join;
   util::OutputManipulator om(os);
-  os << "DeleteFromCommand(table_name=\"" << cmd.table_name;
+  os << "DeleteFromCommand(table_name=\"" << cmd.table_name << "\"";
   if (cmd.condition.has_value())
     os << ", condition=" << cmd.condition.value();
   return os << ")";

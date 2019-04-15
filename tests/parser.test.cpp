@@ -774,3 +774,78 @@ TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
   REQUIRE_FALSE(test_phrase_parser_attr("WHERE col", grammar.where, where));
   REQUIRE_FALSE(test_phrase_parser_attr("WHERE true", grammar.where, where));
 }
+
+TEST_CASE("Printing commands", "[command][debug][print]")
+{
+  using white::davisbase::ast::CreateTableCommand;
+  using white::davisbase::ast::DeleteFromCommand;
+  using white::davisbase::ast::DropTableCommand;
+  using white::davisbase::ast::InsertIntoCommand;
+  using white::davisbase::ast::SelectCommand;
+  using white::davisbase::ast::ShowTablesCommand;
+
+  using white::davisbase::ast::LiteralValue;
+  using white::davisbase::ast::OperatorType;
+  using white::davisbase::ast::WhereClause;
+
+  std::stringstream ss;
+  WhereClause where{"col1", OperatorType::EQUAL, LiteralValue{"test"}};
+  string where_str =
+    "WhereClause(column_name=\"col1\", op=EQUAL, literal=\"test\")";
+
+  SECTION("Where clause")
+  {
+    SECTION("Float")
+    {
+      where.literal.value = 3.14L;
+      ss << where;
+      CHECK(ss.str() ==
+            "WhereClause(column_name=\"col1\", op=EQUAL, literal=3.14000)");
+    }
+
+    SECTION("Integer")
+    {
+      where.literal.value = static_cast<long long>(42);
+      ss << where;
+      CHECK(ss.str() ==
+            "WhereClause(column_name=\"col1\", op=EQUAL, literal=42)");
+    }
+
+    SECTION("String")
+    {
+      where.literal.value = "woosh";
+      ss << where;
+      CHECK(ss.str() ==
+            "WhereClause(column_name=\"col1\", op=EQUAL, literal=\"woosh\")");
+    }
+  }
+
+  SECTION("Show tables command")
+  {
+    ss << ShowTablesCommand();
+    CHECK(ss.str() == "ShowTablesCommand()");
+  }
+
+  SECTION("Drop table command")
+  {
+    ss << DropTableCommand{"table"};
+    CHECK(ss.str() == "DropTableCommand(table_name=\"table\")");
+  }
+
+  SECTION("Delete from command")
+  {
+    SECTION("Without where")
+    {
+      ss << DeleteFromCommand{"table", std::nullopt};
+      CHECK(ss.str() == "DeleteFromCommand(table_name=\"table\")");
+    }
+    SECTION("With where")
+    {
+      ss << DeleteFromCommand{"table", where};
+      CHECK(ss.str() == "DeleteFromCommand(table_name=\"table\", condition=" +
+                          where_str + ")");
+    }
+  }
+
+  /* TODO: CreateTableCommand, InsertIntoCommand, SelectCommand */
+}
