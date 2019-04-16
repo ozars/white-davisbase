@@ -44,4 +44,9 @@ void UpdateCommand::execute()
   std::cout << *this << std::endl;
 }
 
+void CreateIndexCommand::execute()
+{
+  std::cout << *this << std::endl;
+}
+
 } // namespace white::davisbase::ast

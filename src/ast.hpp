@@ -284,13 +284,30 @@ inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
   return os << ")";
 }
 
+struct CreateIndexCommand
+{
+  void execute();
+
+  bool is_unique;
+  std::string table_name;
+  std::string column_name;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const CreateIndexCommand& cmd)
+{
+  using util::join;
+  util::OutputManipulator om(os);
+  return os << "CreateIndexCommand(table_name=\"" << cmd.table_name
+            << "\", column_name=\"" << cmd.column_name << "\"])";
+}
+
 struct Command
 {
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
                InsertIntoCommand, SelectCommand, DeleteFromCommand,
-               UpdateCommand>
+               UpdateCommand, CreateIndexCommand>
     command;
 };
 
@@ -316,6 +333,9 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DeleteFromCommand, table_name,
                           condition)
+
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateIndexCommand, is_unique,
+                          table_name, column_name)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 
