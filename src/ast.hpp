@@ -264,12 +264,33 @@ inline std::ostream& operator<<(std::ostream& os, const DeleteFromCommand& cmd)
   return os << ")";
 }
 
+struct UpdateCommand
+{
+  void execute();
+
+  std::string table_name;
+  std::string column_name;
+  ast::LiteralValue value;
+  std::optional<WhereClause> condition;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
+{
+  util::OutputManipulator om(os);
+  os << "UpdateTableCommand(table_name=\"" << cmd.table_name
+     << "\", column_name=" << cmd.column_name << ", value=" << cmd.value;
+  if (cmd.condition.has_value())
+    os << ", condition=" << cmd.condition.value();
+  return os << ")";
+}
+
 struct Command
 {
   void execute();
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
-               InsertIntoCommand, SelectCommand, DeleteFromCommand>
+               InsertIntoCommand, SelectCommand, DeleteFromCommand,
+               UpdateCommand>
     command;
 };
 
@@ -286,6 +307,9 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
+
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
+                          column_name, value, condition)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
                           table_name, condition)

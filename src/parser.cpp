@@ -15,6 +15,7 @@ using ast::DropTableCommand;
 using ast::InsertIntoCommand;
 using ast::SelectCommand;
 using ast::ShowTablesCommand;
+using ast::UpdateCommand;
 
 using ast::Column;
 using ast::ColumnModifiers;
@@ -134,8 +135,8 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
                   -('(' >> column_name % ',' >> ')') >> Q("VALUES") >> '(' >>
                   literal % ',' >> ')';
     delete_from = Q("DELETE", "FROM") >> table_name >> -where;
-    update = Q("UPDATE") >> table_name >> Q("SET") >>
-             ((column_name >> '=' >> literal) % ',') >> -where;
+    update = Q("UPDATE") >> table_name >> Q("SET") >> column_name >> '=' >>
+             literal >> -where;
 
     /* VDL */
 
@@ -145,7 +146,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     /* Main command */
 
     command = (show_tables | drop_table | create_table | insert_into | select |
-               delete_from) >>
+               delete_from | update) >>
               ';';
   }
 
@@ -180,8 +181,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, DeleteFromCommand(), Skipper> delete_from;
 
   qi::rule<Iterator, SelectCommand(), Skipper> select;
-
-  qi::rule<Iterator, Skipper> update;
+  qi::rule<Iterator, UpdateCommand(), Skipper> update;
   qi::rule<Iterator, Skipper> exit;
 
   qi::rule<Iterator, Command(), Skipper> command;
