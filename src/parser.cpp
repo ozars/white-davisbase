@@ -13,6 +13,7 @@ using ast::CreateTableCommand;
 using ast::DeleteFromCommand;
 using ast::DropTableCommand;
 using ast::InsertIntoCommand;
+using ast::UpdateCommand;
 using ast::SelectCommand;
 using ast::UpdateCommand;
 using ast::ShowTablesCommand;
@@ -134,7 +135,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     insert_into = Q("INSERT", "INTO") >> table_name >>
                   -('(' >> column_name % ',' >> ')') >> Q("VALUES") >> '(' >>
                   literal % ',' >> ')';
-    delete_from = Q("DELETE", "FROM") >> table_name >> where;
+    delete_from = Q("DELETE", "FROM") >> table_name >> -where;
 
     /* Parsing the update command */
     update = Q("UPDATE") >> table_name >> Q("SET") >>

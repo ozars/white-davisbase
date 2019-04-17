@@ -308,17 +308,14 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateTableCommand, table_name,
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::InsertIntoCommand, table_name,
                           column_names, values)
 
-<<<<<<< HEAD
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
+                          column_name, value, condition)
+
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::SelectCommand, column_names,
                           table_name, condition)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DeleteFromCommand, table_name,
                           condition)
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateTableCommand, table_name,
-=======
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::UpdateCommand, table_name,
->>>>>>> Implement review comments and add test cases for update
-                          column_name, value)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ColumnModifiers::IsNull)
 
