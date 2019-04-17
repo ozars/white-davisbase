@@ -39,4 +39,9 @@ void DeleteFromCommand::execute()
   std::cout << *this << std::endl;
 }
 
+void UpdateCommand::execute()
+{
+  std::cout << *this << std::endl;
+}
+
 } // namespace white::davisbase::ast
