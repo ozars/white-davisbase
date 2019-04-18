@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "common.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 
@@ -9,21 +10,6 @@ namespace white::davisbase::parser {
 using std::string;
 
 using ast::Command;
-using ast::CreateIndexCommand;
-using ast::CreateTableCommand;
-using ast::DeleteFromCommand;
-using ast::DropTableCommand;
-using ast::InsertIntoCommand;
-using ast::SelectCommand;
-using ast::ShowTablesCommand;
-using ast::UpdateCommand;
-
-using ast::Column;
-using ast::ColumnModifiers;
-using ast::ColumnType;
-using ast::LiteralValue;
-using ast::OperatorType;
-using ast::WhereClause;
 
 template<typename TStr>
 constexpr auto Q(TStr&& str)
@@ -55,6 +41,9 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     using qi::ascii::digit;
 
     using qi::no_case;
+
+    using common::ColumnType;
+    using common::OperatorType;
 
     /* Identifier Naming Rules */
 
@@ -154,34 +143,36 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, string()> column_name;
   qi::rule<Iterator, string()> table_name;
 
-  qi::symbols<char, ColumnType> field_type;
+  qi::symbols<char, common::ColumnType> field_type;
 
-  qi::rule<Iterator, LiteralValue(), Skipper> literal;
+  qi::rule<Iterator, common::LiteralValue(), Skipper> literal;
   qi::rule<Iterator, string(), Skipper> string_literal;
 
-  qi::symbols<char, OperatorType> op;
+  qi::symbols<char, common::OperatorType> op;
 
-  qi::rule<Iterator, ColumnModifiers::IsNull(), Skipper> is_null;
-  qi::rule<Iterator, ColumnModifiers::NotNull(), Skipper> not_null;
-  qi::rule<Iterator, ColumnModifiers::PrimaryKey(), Skipper> primary_key;
-  qi::rule<Iterator, ColumnModifiers::Unique(), Skipper> unique;
-  qi::rule<Iterator, ColumnModifiers::AutoIncrement(), Skipper> autoincrement;
-  qi::rule<Iterator, ColumnModifiers::DefaultValue(), Skipper> default_value;
-  qi::rule<Iterator, ColumnModifiers(), Skipper> column_modifiers;
+  qi::rule<Iterator, common::ColumnModifiers::IsNull(), Skipper> is_null;
+  qi::rule<Iterator, common::ColumnModifiers::NotNull(), Skipper> not_null;
+  qi::rule<Iterator, common::ColumnModifiers::PrimaryKey(), Skipper>
+    primary_key;
+  qi::rule<Iterator, common::ColumnModifiers::Unique(), Skipper> unique;
+  qi::rule<Iterator, common::ColumnModifiers::AutoIncrement(), Skipper>
+    autoincrement;
+  qi::rule<Iterator, common::ColumnModifiers::DefaultValue(), Skipper>
+    default_value;
+  qi::rule<Iterator, common::ColumnModifiers(), Skipper> column_modifiers;
 
-  qi::rule<Iterator, Column(), Skipper> column;
-  qi::rule<Iterator, WhereClause(), Skipper> where;
+  qi::rule<Iterator, common::ColumnDefinition(), Skipper> column;
+  qi::rule<Iterator, ast::WhereClause(), Skipper> where;
 
-  qi::rule<Iterator, ShowTablesCommand(), Skipper> show_tables;
-  qi::rule<Iterator, CreateTableCommand(), Skipper> create_table;
-  qi::rule<Iterator, DropTableCommand(), Skipper> drop_table;
-  qi::rule<Iterator, CreateIndexCommand(), Skipper> create_index;
+  qi::rule<Iterator, ast::ShowTablesCommand(), Skipper> show_tables;
+  qi::rule<Iterator, ast::CreateTableCommand(), Skipper> create_table;
+  qi::rule<Iterator, ast::DropTableCommand(), Skipper> drop_table;
+  qi::rule<Iterator, ast::CreateIndexCommand(), Skipper> create_index;
 
-  qi::rule<Iterator, InsertIntoCommand(), Skipper> insert_into;
-  qi::rule<Iterator, DeleteFromCommand(), Skipper> delete_from;
-
-  qi::rule<Iterator, SelectCommand(), Skipper> select;
-  qi::rule<Iterator, UpdateCommand(), Skipper> update;
+  qi::rule<Iterator, ast::InsertIntoCommand(), Skipper> insert_into;
+  qi::rule<Iterator, ast::DeleteFromCommand(), Skipper> delete_from;
+  qi::rule<Iterator, ast::SelectCommand(), Skipper> select;
+  qi::rule<Iterator, ast::UpdateCommand(), Skipper> update;
   qi::rule<Iterator, Skipper> exit;
 
   qi::rule<Iterator, Command(), Skipper> command;
