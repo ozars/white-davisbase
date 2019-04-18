@@ -788,6 +788,57 @@ TEST_CASE("Parse updating a table", "[parser][update]")
   }
 }
 
+TEST_CASE("Parse creating index command", "[parser][create_index]")
+{
+  using white::davisbase::ast::CreateIndexCommand;
+
+  Parser parser;
+  Command parsed_cmd;
+
+  SECTION("Simple cases")
+  {
+    REQUIRE_NOTHROW(parser.parse("CREATE INDEX ON tbl (col1);"));
+    REQUIRE_NOTHROW(parser.parse("CREATE UNIQUE INDEX ON tbl (col1);"));
+
+    REQUIRE_THROWS(parser.parse("CREATE INDEX ON tbl (col1)"));
+    REQUIRE_THROWS(parser.parse("CREATE INDEX ON tbl (col1, col2);"));
+    REQUIRE_THROWS(parser.parse("CREATE INDEX ON (col1);"));
+    REQUIRE_THROWS(parser.parse("CREATE INDEX ON tbl col1;"));
+    REQUIRE_THROWS(parser.parse("CREATE INDEX ON tbl;"));
+    REQUIRE_THROWS(parser.parse("CREATE UNIQUE INDEX ON tbl (col1)"));
+    REQUIRE_THROWS(parser.parse("CREATE UNIQUE INDEX ON tbl (col1, col2);"));
+    REQUIRE_THROWS(parser.parse("CREATE UNIQUE INDEX ON (col1);"));
+    REQUIRE_THROWS(parser.parse("CREATE UNIQUE INDEX ON tbl col1;"));
+    REQUIRE_THROWS(parser.parse("CREATE UNIQUE INDEX ON tbl;"));
+  }
+
+  SECTION("Parsed content")
+  {
+    CreateIndexCommand actual_cmd;
+
+    SECTION("Without unique")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse("CREATE INDEX ON tbl (col1);"));
+      REQUIRE(holds_alternative<CreateIndexCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<CreateIndexCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "tbl");
+      CHECK(actual_cmd.is_unique == false);
+      CHECK(actual_cmd.column_name == "col1");
+    }
+
+    SECTION("With unique")
+    {
+      REQUIRE_NOTHROW(parsed_cmd =
+                        parser.parse("CREATE UNIQUE INDEX ON tbl (col1);"));
+      REQUIRE(holds_alternative<CreateIndexCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<CreateIndexCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "tbl");
+      CHECK(actual_cmd.is_unique == true);
+      CHECK(actual_cmd.column_name == "col1");
+    }
+  }
+}
+
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
   using white::davisbase::ast::OperatorType;

@@ -9,6 +9,7 @@ namespace white::davisbase::parser {
 using std::string;
 
 using ast::Command;
+using ast::CreateIndexCommand;
 using ast::CreateTableCommand;
 using ast::DeleteFromCommand;
 using ast::DropTableCommand;
@@ -124,10 +125,9 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
       Q("CREATE", "TABLE") >> table_name >> '(' >> column % ',' >> ')';
     drop_table = Q("DROP", "TABLE") >> table_name;
 
-    /* TODO: Uniqueness. */
-    create_index =
-      no_case[lit("CREATE") >> -lit("UNIQUE") >> "INDEX" >> "ON"] >>
-      table_name >> '(' >> column % ',' >> ')';
+    create_index = Q("CREATE") >>
+                   (Q("UNIQUE") >> qi::attr(true) | qi::attr(false)) >>
+                   Q("INDEX", "ON") >> table_name >> '(' >> column_name >> ')';
 
     /* DML */
 
@@ -146,7 +146,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     /* Main command */
 
     command = (show_tables | drop_table | create_table | insert_into | select |
-               delete_from | update) >>
+               delete_from | update | create_index) >>
               ';';
   }
 
@@ -175,7 +175,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, ShowTablesCommand(), Skipper> show_tables;
   qi::rule<Iterator, CreateTableCommand(), Skipper> create_table;
   qi::rule<Iterator, DropTableCommand(), Skipper> drop_table;
-  qi::rule<Iterator, Skipper> create_index;
+  qi::rule<Iterator, CreateIndexCommand(), Skipper> create_index;
 
   qi::rule<Iterator, InsertIntoCommand(), Skipper> insert_into;
   qi::rule<Iterator, DeleteFromCommand(), Skipper> delete_from;
