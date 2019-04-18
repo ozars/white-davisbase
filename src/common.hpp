@@ -141,26 +141,18 @@ inline std::ostream& operator<<(std::ostream& os, const LiteralValue& literal)
 
 struct ColumnModifiers
 {
-  struct IsNull
-  {};
-  struct NotNull
-  {};
-  struct PrimaryKey
-  {};
-  struct Unique
-  {};
-  struct AutoIncrement
-  {};
   struct DefaultValue
   {
     LiteralValue literal;
   };
 
-  std::optional<IsNull> is_null;
-  std::optional<NotNull> not_null;
-  std::optional<PrimaryKey> primary_key;
-  std::optional<AutoIncrement> auto_increment;
-  std::optional<Unique> unique;
+  ColumnModifiers() = default;
+
+  bool is_null;
+  bool not_null;
+  bool primary_key;
+  bool auto_increment;
+  bool unique;
   std::optional<DefaultValue> default_value;
 };
 
@@ -176,12 +168,10 @@ inline std::ostream& operator<<(std::ostream& os,
 {
   util::OutputManipulator om(os);
   os << "ColumnModifiers("
-     << "is_null=" << modifiers.is_null.has_value()
-     << ", not_null=" << modifiers.not_null.has_value()
-     << ", primary_key=" << modifiers.primary_key.has_value()
-     << ", unique=" << modifiers.unique.has_value()
-     << ", autoincrement=" << modifiers.auto_increment.has_value()
-     << ", default_value=";
+     << "is_null=" << modifiers.is_null << ", not_null=" << modifiers.not_null
+     << ", primary_key=" << modifiers.primary_key
+     << ", unique=" << modifiers.unique
+     << ", autoincrement=" << modifiers.auto_increment << ", default_value=";
   if (modifiers.default_value.has_value())
     os << modifiers.default_value.value();
   else
@@ -207,17 +197,6 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 } // namespace white::davisbase::common
-
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::common::ColumnModifiers::IsNull)
-
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::common::ColumnModifiers::NotNull)
-
-BOOST_FUSION_ADAPT_STRUCT(
-  white::davisbase::common::ColumnModifiers::AutoIncrement)
-
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::common::ColumnModifiers::Unique)
-
-BOOST_FUSION_ADAPT_STRUCT(white::davisbase::common::ColumnModifiers::PrimaryKey)
 
 BOOST_FUSION_ADAPT_STRUCT(
   white::davisbase::common::ColumnModifiers::DefaultValue, literal)

@@ -93,11 +93,11 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
     /* Other Primitive Rules */
 
-    is_null = Q("NULL");
-    not_null = Q("NOT", "NULL");
-    primary_key = Q("PRIMARY", "KEY");
-    autoincrement = Q("AUTOINCREMENT");
-    unique = Q("UNIQUE");
+    is_null = Q("NULL") >> qi::attr(true);
+    not_null = Q("NOT", "NULL") >> qi::attr(true);
+    primary_key = Q("PRIMARY", "KEY") >> qi::attr(true);
+    autoincrement = Q("AUTOINCREMENT") >> qi::attr(true);
+    unique = Q("UNIQUE") >> qi::attr(true);
     default_value = Q("DEFAULT") >> literal;
 
     column_modifiers =
@@ -150,13 +150,11 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
   qi::symbols<char, common::OperatorType> op;
 
-  qi::rule<Iterator, common::ColumnModifiers::IsNull(), Skipper> is_null;
-  qi::rule<Iterator, common::ColumnModifiers::NotNull(), Skipper> not_null;
-  qi::rule<Iterator, common::ColumnModifiers::PrimaryKey(), Skipper>
-    primary_key;
-  qi::rule<Iterator, common::ColumnModifiers::Unique(), Skipper> unique;
-  qi::rule<Iterator, common::ColumnModifiers::AutoIncrement(), Skipper>
-    autoincrement;
+  qi::rule<Iterator, bool, Skipper> is_null;
+  qi::rule<Iterator, bool, Skipper> not_null;
+  qi::rule<Iterator, bool, Skipper> primary_key;
+  qi::rule<Iterator, bool, Skipper> unique;
+  qi::rule<Iterator, bool, Skipper> autoincrement;
   qi::rule<Iterator, common::ColumnModifiers::DefaultValue(), Skipper>
     default_value;
   qi::rule<Iterator, common::ColumnModifiers(), Skipper> column_modifiers;

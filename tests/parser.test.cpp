@@ -112,11 +112,11 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
       CHECK(column.name == column_name_prefix);
       CHECK(column.type == type);
 
-      CHECK_FALSE(column.modifiers.primary_key.has_value());
-      CHECK_FALSE(column.modifiers.unique.has_value());
-      CHECK_FALSE(column.modifiers.is_null.has_value());
-      CHECK_FALSE(column.modifiers.not_null.has_value());
-      CHECK_FALSE(column.modifiers.auto_increment.has_value());
+      CHECK_FALSE(column.modifiers.primary_key);
+      CHECK_FALSE(column.modifiers.unique);
+      CHECK_FALSE(column.modifiers.is_null);
+      CHECK_FALSE(column.modifiers.not_null);
+      CHECK_FALSE(column.modifiers.auto_increment);
       CHECK_FALSE(column.modifiers.default_value.has_value());
     }
 
@@ -154,11 +154,11 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.name == column_name_prefix + std::to_string(i));
         CHECK(column.type == types[i]);
 
-        CHECK_FALSE(column.modifiers.primary_key.has_value());
-        CHECK_FALSE(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
-        CHECK_FALSE(column.modifiers.auto_increment.has_value());
+        CHECK_FALSE(column.modifiers.primary_key);
+        CHECK_FALSE(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
+        CHECK_FALSE(column.modifiers.auto_increment);
         CHECK_FALSE(column.modifiers.default_value.has_value());
       }
     }
@@ -173,19 +173,19 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
     auto modifiers_list = make_array<modifiers_list_t>(
       tuple{string("PRIMARY KEY"),
             [](const ColumnDefinition& column) {
-              return column.modifiers.primary_key.has_value();
+              return column.modifiers.primary_key;
             }},
       tuple{string("AUTOINCREMENT"),
             [](const ColumnDefinition& column) {
-              return column.modifiers.auto_increment.has_value();
+              return column.modifiers.auto_increment;
             }},
       tuple{string("NOT NULL"),
             [](const ColumnDefinition& column) {
-              return column.modifiers.not_null.has_value();
+              return column.modifiers.not_null;
             }},
       tuple{string("NULL"),
             [](const ColumnDefinition& column) {
-              return column.modifiers.is_null.has_value();
+              return column.modifiers.is_null;
             }},
       tuple{string("DEFAULT 'omer'"),
             [](const ColumnDefinition& column) {
@@ -231,7 +231,7 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
                      get<long double>(def.value().literal.value) == 13.37L;
             }},
       tuple{string("UNIQUE"), [](const ColumnDefinition& column) {
-              return column.modifiers.unique.has_value();
+              return column.modifiers.unique;
             }});
 
     SECTION("Simple cases")
@@ -375,12 +375,12 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.name == "id");
         CHECK(column.type == ColumnType::INT);
 
-        CHECK(column.modifiers.primary_key.has_value());
-        CHECK(column.modifiers.auto_increment.has_value());
+        CHECK(column.modifiers.primary_key);
+        CHECK(column.modifiers.auto_increment);
 
-        CHECK_FALSE(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
+        CHECK_FALSE(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
         CHECK_FALSE(column.modifiers.default_value.has_value());
       }
       {
@@ -390,11 +390,11 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.type == ColumnType::TEXT);
 
         CHECK(column.modifiers.default_value.has_value());
-        CHECK(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.primary_key.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
-        CHECK_FALSE(column.modifiers.auto_increment.has_value());
+        CHECK(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.primary_key);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
+        CHECK_FALSE(column.modifiers.auto_increment);
 
         using white::davisbase::common::LiteralValue;
 
