@@ -1,13 +1,13 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "ast.hpp"
 
 namespace std {
-  template<class T>
-  struct less;
+template<class T>
+struct less;
 }
 
 namespace white::davisbase::fs {
@@ -48,8 +48,7 @@ public:
   void setTableName(std::string table_name);
 };
 
-class Index {
-
-};
+class Index
+{};
 
 } // namespace white::davisbase::fs

@@ -60,8 +60,8 @@ TEST_CASE("Parse dropping a table", "[parser][drop_table]")
 
 TEST_CASE("Parse creating table", "[parser][create_table]")
 {
-  using white::davisbase::common::ColumnType;
   using white::davisbase::ast::CreateTableCommand;
+  using white::davisbase::common::ColumnType;
 
   Parser parser;
   Command parsed_cmd;
@@ -169,7 +169,8 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
     using white::davisbase::common::ColumnDefinition;
     using white::davisbase::common::ColumnModifiers;
 
-    using modifiers_list_t = tuple<string, std::function<bool(const ColumnDefinition&)>>;
+    using modifiers_list_t =
+      tuple<string, std::function<bool(const ColumnDefinition&)>>;
     auto modifiers_list = make_array<modifiers_list_t>(
       tuple{string("PRIMARY KEY"),
             [](const ColumnDefinition& column) {
@@ -409,8 +410,8 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
 
 TEST_CASE("Parse inserting into table", "[parser][insert_into]")
 {
-  using white::davisbase::common::ColumnType;
   using white::davisbase::ast::InsertIntoCommand;
+  using white::davisbase::common::ColumnType;
 
   Parser parser;
   Command parsed_cmd;
@@ -532,9 +533,9 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
 
 TEST_CASE("Parse select from table", "[parser][select]")
 {
-  using white::davisbase::common::OperatorType;
   using white::davisbase::ast::SelectCommand;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -658,8 +659,8 @@ TEST_CASE("Parse select from table", "[parser][select]")
 TEST_CASE("Parse delete from table", "[parser][delete_from]")
 {
   using white::davisbase::ast::DeleteFromCommand;
-  using white::davisbase::common::OperatorType;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -720,10 +721,10 @@ TEST_CASE("Parse delete from table", "[parser][delete_from]")
 
 TEST_CASE("Parse updating a table", "[parser][update]")
 {
-  using white::davisbase::common::ColumnType;
-  using white::davisbase::common::OperatorType;
   using white::davisbase::ast::UpdateCommand;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::ColumnType;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -841,8 +842,8 @@ TEST_CASE("Parse creating index command", "[parser][create_index]")
 
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
-  using white::davisbase::common::OperatorType;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
   using white::davisbase::parser::StringQueryGrammar;
   using white::util::test_phrase_parser_attr;
 
@@ -905,9 +906,9 @@ TEST_CASE("Printing commands", "[command][debug][print]")
   using white::davisbase::ast::SelectCommand;
   using white::davisbase::ast::ShowTablesCommand;
 
+  using white::davisbase::ast::WhereClause;
   using white::davisbase::common::LiteralValue;
   using white::davisbase::common::OperatorType;
-  using white::davisbase::ast::WhereClause;
 
   std::stringstream ss;
   WhereClause where{"col1", OperatorType::EQUAL, LiteralValue{"test"}};
