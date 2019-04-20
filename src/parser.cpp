@@ -78,7 +78,8 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     );
     // clang-format on
 
-    literal = string_literal | floating_point_literal | long_long;
+    null_value = Q("NULL");
+    literal = null_value | string_literal | floating_point_literal | long_long;
 
     /* Operator Rules */
 
@@ -145,6 +146,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
 
   qi::symbols<char, common::ColumnType> field_type;
 
+  qi::rule<Iterator, common::NullValue(), Skipper> null_value;
   qi::rule<Iterator, common::LiteralValue(), Skipper> literal;
   qi::rule<Iterator, string(), Skipper> string_literal;
 

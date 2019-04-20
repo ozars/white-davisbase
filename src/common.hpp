@@ -120,9 +120,12 @@ inline std::ostream& operator<<(std::ostream& os, const OperatorType& op)
   return os << to_string(op);
 }
 
+struct NullValue
+{};
+
 struct LiteralValue
 {
-  std::variant<std::string, long double, long long> value;
+  std::variant<NullValue, std::string, long double, long long> value;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const LiteralValue& literal)
@@ -130,7 +133,10 @@ inline std::ostream& operator<<(std::ostream& os, const LiteralValue& literal)
   util::OutputManipulator om(os);
   std::visit(
     [&](auto& value) {
-      if (!std::is_arithmetic_v<std::remove_reference_t<decltype(value)>>)
+      using type = std::remove_cv_t<std::remove_reference_t<decltype(value)>>;
+      if constexpr (std::is_same_v<type, NullValue>)
+        os << "NULL";
+      else if constexpr (!std::is_arithmetic_v<type>)
         os << "\"" << value << "\"";
       else
         os << value;
