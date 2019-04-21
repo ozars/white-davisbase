@@ -59,8 +59,11 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
       ("smallint", ColumnType::SMALLINT)
       ("int", ColumnType::INT)
       ("bigint", ColumnType::BIGINT)
-      ("real", ColumnType::REAL)
-      ("double", ColumnType::DOUBLE)
+      ("long", ColumnType::BIGINT)
+      ("float", ColumnType::FLOAT)
+      ("real", ColumnType::FLOAT)
+      ("year", ColumnType::YEAR)
+      ("time", ColumnType::TIME)
       ("datetime", ColumnType::DATETIME)
       ("date", ColumnType::DATE)
       ("text", ColumnType::TEXT);

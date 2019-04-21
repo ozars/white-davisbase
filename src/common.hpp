@@ -10,14 +10,15 @@
 
 namespace white::davisbase::common {
 
-enum class ColumnType
+enum class ColumnType : uint8_t
 {
-  TINYINT,
+  TINYINT = 0,
   SMALLINT,
   INT,
   BIGINT,
-  REAL,
-  DOUBLE,
+  FLOAT,
+  YEAR,
+  TIME,
   DATETIME,
   DATE,
   TEXT,
@@ -27,8 +28,8 @@ enum class ColumnType
 
 inline std::string to_string(const ColumnType& type)
 {
-  auto vals = std::array{"TINYINT", "SMALLINT", "INT",  "BIGINT", "REAL",
-                         "DOUBLE",  "DATETIME", "DATE", "TEXT"};
+  auto vals = std::array{"TINYINT", "SMALLINT", "INT",      "BIGINT", "FLOAT",
+                         "YEAR",    "TIME",     "DATETIME", "DATE",   "TEXT"};
   if (type < ColumnType::_FIRST || type > ColumnType::_LAST)
     return "UNKNOWN";
   return vals[static_cast<size_t>(type)];
@@ -40,58 +41,102 @@ inline std::ostream& operator<<(std::ostream& os, const ColumnType& type)
   return os << to_string(type);
 }
 
+enum class SerialTypeCode : uint8_t
+{
+  NULL_TYPE = 0x00,
+  TINYINT = 0x01,
+  SMALLINT = 0x02,
+  INT = 0x03,
+  BIGINT = 0x04,
+  FLOAT = 0x05,
+  YEAR = 0x06,
+  TIME = 0x08,
+  UNUSED = 0x09,
+  DATETIME = 0x0A,
+  DATE = 0x0B,
+  TEXT = 0x0C
+};
+
 template<ColumnType T>
-struct UnderlyingColumnType
+struct UnderlyingColumnTypeHelper
 {};
 
+template<ColumnType T>
+using UnderlyingColumnType = typename UnderlyingColumnTypeHelper<T>::type;
+
+template<ColumnType T>
+constexpr SerialTypeCode underlying_typecode =
+  UnderlyingColumnTypeHelper<T>::typecode;
+
 template<>
-struct UnderlyingColumnType<ColumnType::TINYINT>
+struct UnderlyingColumnTypeHelper<ColumnType::TINYINT>
 {
   using type = int8_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::TINYINT;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::SMALLINT>
+struct UnderlyingColumnTypeHelper<ColumnType::SMALLINT>
 {
   using type = int16_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::SMALLINT;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::INT>
+struct UnderlyingColumnTypeHelper<ColumnType::INT>
 {
   using type = int32_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::INT;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::BIGINT>
+struct UnderlyingColumnTypeHelper<ColumnType::BIGINT>
 {
   using type = int64_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::BIGINT;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::REAL>
+struct UnderlyingColumnTypeHelper<ColumnType::FLOAT>
 {
-  static_assert(sizeof(float) == 4, "Float type is not 4 bytes.");
-  using type = float;
-};
-
-template<>
-struct UnderlyingColumnType<ColumnType::DOUBLE>
-{
-  static_assert(sizeof(float) == 4, "Float type is not 4 bytes.");
+  static_assert(sizeof(double) == 8, "Double type is not 8 bytes.");
   using type = double;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::FLOAT;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::DATETIME>
+struct UnderlyingColumnTypeHelper<ColumnType::YEAR>
 {
-  using type = uint64_t;
+  using type = int8_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::YEAR;
 };
 
 template<>
-struct UnderlyingColumnType<ColumnType::DATE>
+struct UnderlyingColumnTypeHelper<ColumnType::TIME>
+{
+  using type = int32_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::TIME;
+};
+
+template<>
+struct UnderlyingColumnTypeHelper<ColumnType::DATETIME>
 {
   using type = uint64_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::DATETIME;
+};
+
+template<>
+struct UnderlyingColumnTypeHelper<ColumnType::DATE>
+{
+  using type = uint64_t;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::DATE;
+};
+
+template<>
+struct UnderlyingColumnTypeHelper<ColumnType::TEXT>
+{
+  using type = std::string;
+  static constexpr SerialTypeCode typecode = SerialTypeCode::TEXT;
 };
 
 enum class OperatorType

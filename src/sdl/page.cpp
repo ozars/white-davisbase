@@ -1,0 +1,101 @@
+#include "page.hpp"
+#include "table.hpp"
+
+namespace white::davisbase::sdl {
+
+/* protected: */
+
+Page::Page(Table& table, PageNo page_no, std::unique_ptr<char[]> raw_data)
+  : table_(&table)
+  , page_no_(page_no)
+  , raw_data_(std::move(raw_data))
+{}
+
+CellOffset Page::cellOffset(CellIndex index) const
+{
+  if (index >= cellCount())
+    throw std::logic_error("Requested cell index is out of range for the page");
+
+  auto offset = reinterpret_cast<const CellOffset*>(rawData() + 0x09)[index];
+
+  if (offset >= table().pageLength())
+    throw std::logic_error(
+      "Cell offset for requested index is beyond page boundaries");
+
+  return offset;
+}
+
+CellOffset Page::cellContentAreaOffset() const
+{
+  return offset_cast<CellOffset>(rawData(), 0x03);
+}
+
+void Page::setCellOffset(CellIndex index, CellOffset offset)
+{
+  if (offset >= table().pageLength())
+    throw std::logic_error(
+      "Cell offset for requested index is beyond page boundaries");
+  if (index >= cellCount())
+    throw std::logic_error("Requested cell index is out of range for the page");
+
+  reinterpret_cast<CellOffset*>(rawData() + 0x09)[index] = offset;
+}
+
+void Page::setCellContentAreaOffset(CellOffset offset)
+{
+  offset_cast<CellOffset>(rawData(), 0x03) = offset;
+}
+
+void Page::setCellCount(CellCount count)
+{
+  offset_cast<CellOffset>(rawData(), 0x01) = count;
+}
+
+char* Page::rawData()
+{
+  return raw_data_.get();
+}
+
+Table& Page::table()
+{
+  return *table_;
+}
+
+const Table& Page::table() const
+{
+  return *table_;
+}
+
+/* public: */
+
+PageNo Page::pageNo() const
+{
+  return page_no_;
+}
+
+const char* Page::rawData() const
+{
+  return raw_data_.get();
+}
+
+CellCount Page::cellCount() const
+{
+  return offset_cast<CellOffset>(rawData(), 0x01);
+}
+
+void Page::setPageNo(PageNo page_no)
+{
+  page_no_ = page_no;
+}
+
+void Page::setRawData(std::unique_ptr<char[]> raw_data)
+{
+  raw_data_ = std::move(raw_data);
+}
+
+void Page::commit()
+{
+  table().commitPage(*this);
+}
+
+} // namespace white::davisbase::sdl

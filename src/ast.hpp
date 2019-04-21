@@ -11,6 +11,7 @@
 
 #include "common.hpp"
 #include "util.hpp"
+#include "sdl/database.hpp"
 
 namespace white::davisbase::ast {
 
@@ -30,7 +31,7 @@ inline std::ostream& operator<<(std::ostream& os, const WhereClause& where)
 
 struct ShowTablesCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 };
 
 inline std::ostream& operator<<(std::ostream& os, __attribute__((unused))
@@ -42,10 +43,11 @@ inline std::ostream& operator<<(std::ostream& os, __attribute__((unused))
 
 struct DropTableCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::string table_name;
 };
+
 inline std::ostream& operator<<(std::ostream& os, const DropTableCommand& cmd)
 {
   util::OutputManipulator om(os);
@@ -54,7 +56,7 @@ inline std::ostream& operator<<(std::ostream& os, const DropTableCommand& cmd)
 
 struct CreateTableCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::string table_name;
   std::vector<common::ColumnDefinition> columns;
@@ -70,7 +72,7 @@ inline std::ostream& operator<<(std::ostream& os, const CreateTableCommand& cmd)
 
 struct InsertIntoCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::string table_name;
   std::vector<std::string> column_names;
@@ -88,7 +90,7 @@ inline std::ostream& operator<<(std::ostream& os, const InsertIntoCommand& cmd)
 
 struct SelectCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::vector<std::string> column_names;
   std::string table_name;
@@ -108,7 +110,7 @@ inline std::ostream& operator<<(std::ostream& os, const SelectCommand& cmd)
 
 struct DeleteFromCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::string table_name;
   std::optional<WhereClause> condition;
@@ -126,7 +128,7 @@ inline std::ostream& operator<<(std::ostream& os, const DeleteFromCommand& cmd)
 
 struct UpdateCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::string table_name;
   std::string column_name;
@@ -146,7 +148,7 @@ inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
 
 struct CreateIndexCommand
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   bool is_unique;
   std::string table_name;
@@ -163,7 +165,7 @@ inline std::ostream& operator<<(std::ostream& os, const CreateIndexCommand& cmd)
 
 struct Command
 {
-  void execute();
+  void execute(sdl::Database& database);
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
                InsertIntoCommand, SelectCommand, DeleteFromCommand,
