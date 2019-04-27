@@ -63,8 +63,37 @@ Database::Schema Database::initializeSchema()
     directory_path_ / (columns_schema_name + TABLE_FILE_EXT);
 
   if (fs::exists(tables_path) && fs::exists(columns_path) &&
-      fs::is_regular_file(tables_path) && fs::is_regular_file(columns_path))
-    return {getTable(tables_schema_name), getTable(columns_schema_name)};
+      fs::is_regular_file(tables_path) && fs::is_regular_file(columns_path)) {
+
+    auto tables_schema =
+      Table(*this, tables_schema_name, open_existing_file(tables_path), 0, 0, 0,
+            default_page_length_);
+
+    auto columns_schema =
+      Table(*this, columns_schema_name, open_existing_file(tables_path), 0, 0,
+            0, default_page_length_);
+
+    PageNo root_page_no;
+    PageCount page_count;
+    RowId next_row_id;
+    PageLength page_length;
+
+    getTableInfo(tables_schema_name, root_page_no, page_count, next_row_id,
+                 page_length, tables_schema);
+
+    tables_schema.setRootPageNo(root_page_no);
+    tables_schema.setPageCount(page_count);
+    tables_schema.setNextRowId(next_row_id);
+
+    getTableInfo(columns_schema_name, root_page_no, page_count, next_row_id,
+                 page_length, tables_schema);
+
+    columns_schema.setRootPageNo(root_page_no);
+    columns_schema.setPageCount(page_count);
+    columns_schema.setNextRowId(next_row_id);
+
+    return {std::move(tables_schema), std::move(columns_schema)};
+  }
 
   using common::ColumnType;
   using std::get;
@@ -154,11 +183,43 @@ Database::Schema Database::initializeSchema()
   return {std::move(tables_schema), std::move(columns_schema)};
 }
 
+void Database::getTableInfo(const std::string& table_name, PageNo& root_page_no,
+                            PageCount& page_count, RowId& next_row_id,
+                            PageLength& page_length)
+{
+  getTableInfo(table_name, root_page_no, page_count, next_row_id, page_length,
+               schema_.tables);
+}
+
+void Database::getTableInfo(const std::string& table_name, PageNo& root_page_no,
+                            PageCount& page_count, RowId& next_row_id,
+                            PageLength& page_length, Table& tables_schema)
+{
+  using std::get;
+
+  root_page_no = 0;
+
+  auto page = tables_schema.leftmostLeafPage();
+  while (true) {
+    for (CellIndex i = 0; i < page.cellCount(); i++) {
+      auto cell = page.getCell(i);
+      if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+        page_count = get<IntColumnValue>(cell.row_data[2]).get();
+        next_row_id = get<IntColumnValue>(cell.row_data[3]).get();
+        page_length = get<SmallIntColumnValue>(cell.row_data[4]).get();
+        return;
+      }
+    }
+    if (!page.hasRightSiblingPage())
+      throw std::runtime_error("Table entry is not found on schema");
+    page = page.rightSiblingPage();
+  }
+}
+
 // Table Database::createTable(string table_name) {}
 
 Table Database::getTable(std::string table_name)
 {
-  using std::get;
 
   static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
@@ -171,23 +232,15 @@ Table Database::getTable(std::string table_name)
   if (!file)
     throw std::runtime_error("Couldn't open table file");
 
-  auto page = schema_.tables.leftmostLeafPage();
-  while (true) {
-    for (CellIndex i = 0; i < page.cellCount(); i++) {
-      auto cell = page.getCell(i);
-      if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
-        auto root_page_no = get<IntColumnValue>(cell.row_data[1]).get();
-        auto page_count = get<IntColumnValue>(cell.row_data[2]).get();
-        auto next_row_id = get<IntColumnValue>(cell.row_data[3]).get();
-        auto page_length = get<SmallIntColumnValue>(cell.row_data[3]).get();
-        return Table(*this, table_name, std::move(file), root_page_no,
-                     next_row_id, page_count, page_length);
-      }
-    }
-    if (!page.hasRightSiblingPage())
-      throw std::runtime_error("Table entry is not found on schema");
-    page = page.rightSiblingPage();
-  }
+  PageNo root_page_no;
+  PageCount page_count;
+  RowId next_row_id;
+  PageLength page_length;
+
+  getTableInfo(table_name, root_page_no, page_count, next_row_id, page_length);
+
+  return Table(*this, table_name, std::move(file), root_page_no, next_row_id,
+               page_count, page_length);
 }
 
 // void Database::removeTable(string table_name) {}

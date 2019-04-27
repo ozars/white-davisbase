@@ -78,12 +78,16 @@ void Table::appendRecord(const TableLeafCell& cell)
     auto new_page_optional = current_root_page.appendRecord(cell);
     if (new_page_optional.has_value()) {
       auto& new_page = new_page_optional.value();
-      auto new_root = TableInteriorPage::create(*this, pageCount());
+      auto new_root = TableInteriorPage::create(*this, 0);
+
+      current_root_page.setPageNo(pageCount());
+
       new_root.appendCell({current_root_page.pageNo(), new_page.minRowId()});
       new_root.setRightmostChildPageNo(new_page.pageNo());
+      current_root_page.commit();
       new_root.commit();
-      setRootPageNo(new_root.pageNo());
       setPageCount(pageCount() + 1);
+      // setRootPageNo(new_root.pageNo());
     }
   };
 

@@ -27,6 +27,14 @@ private:
 
   Schema initializeSchema();
 
+  void getTableInfo(const std::string& table_name, PageNo& root_page_no,
+                    PageCount& page_count, RowId& next_row_id,
+                    PageLength& page_length);
+
+  void getTableInfo(const std::string& table_name, PageNo& root_page_no,
+                    PageCount& page_count, RowId& next_row_id,
+                    PageLength& page_length, Table& tables_schema);
+
 public:
   Database(
     std::filesystem::path directory_path = std::filesystem::current_path(),
