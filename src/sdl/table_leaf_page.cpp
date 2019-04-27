@@ -259,6 +259,7 @@ std::optional<TableLeafPage> TableLeafPage::appendRecord(
 {
   if (hasEnoughSpace(cell)) {
     appendCell(cell);
+    commit();
     return std::nullopt;
   }
 
