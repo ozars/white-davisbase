@@ -13,8 +13,12 @@ class Database
 private:
   static constexpr auto TABLE_FILE_EXT = ".tbl";
   static constexpr auto INDEX_FILE_EXT = ".ndx";
-  static constexpr RowId INITIAL_ROW_ID = 1;
+
   static constexpr PageLength DEFAULT_PAGE_LENGTH = 512;
+
+  static constexpr PageNo ROOT_PAGE = 0;
+  static constexpr PageCount INITIAL_PAGE_COUNT = 1;
+  static constexpr RowId INITIAL_ROW_ID = 1;
 
   std::filesystem::path directory_path_;
   PageLength default_page_length_;
@@ -40,8 +44,8 @@ public:
     std::filesystem::path directory_path = std::filesystem::current_path(),
     PageLength default_page_length = DEFAULT_PAGE_LENGTH);
 
-  // Table createTable(std::string table_name);
-  Table getTable(std::string table_name);
+  Table createTable(const std::string& table_name);
+  Table getTable(const std::string& table_name);
   // void removeTable(std::string table_name);
 };
 

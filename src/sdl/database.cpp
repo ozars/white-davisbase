@@ -216,11 +216,32 @@ void Database::getTableInfo(const std::string& table_name, PageNo& root_page_no,
   }
 }
 
-// Table Database::createTable(string table_name) {}
-
-Table Database::getTable(std::string table_name)
+Table Database::createTable(const std::string& table_name)
 {
+  static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
+  if (fs::exists(path))
+    throw std::runtime_error("Table file already exists");
+
+  auto file = open_new_file(path);
+  if (!file)
+    throw std::runtime_error("Couldn't create table file");
+
+  auto table = Table::create(*this, table_name, std::move(file), INITIAL_ROW_ID,
+                             default_page_length_);
+
+  RowData row_data{
+    TextColumnValue(table_name), IntColumnValue(table.rootPageNo()),
+    IntColumnValue(table.pageCount()), IntColumnValue(table.nextRowId()),
+    SmallIntColumnValue(table.pageLength())};
+
+  schema_.tables.appendRecord(row_data);
+
+  return table;
+}
+
+Table Database::getTable(const std::string& table_name)
+{
   static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
   if (!fs::exists(path))
