@@ -11,6 +11,7 @@ class ColumnValue
 {
 public:
   static constexpr auto column_type = T;
+  static constexpr auto typecode = common::underlying_typecode<T>;
   using underlying_type = common::UnderlyingColumnType<T>;
 
 private:

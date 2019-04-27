@@ -51,11 +51,23 @@ void TableLeafCellPayload::writeTo(char* addr) const
 {
   using common::ColumnType;
   using common::NullValue;
+  using common::SerialTypeCode;
+
+  auto write_type = [&addr](auto&& val) {
+    using T = std::decay_t<decltype(val)>;
+    if constexpr (std::is_same_v<T, NullValue>) {
+      *addr++ = static_cast<uint8_t>(SerialTypeCode::NULL_TYPE);
+    } else if constexpr (T::column_type == ColumnType::TEXT) {
+      *addr++ = static_cast<uint8_t>(SerialTypeCode::TEXT) + val.get().size();
+    } else {
+      *addr++ = static_cast<uint8_t>(T::typecode);
+    }
+  };
 
   auto write_value = [&addr](auto&& val) {
     using T = std::decay_t<decltype(val)>;
     if constexpr (std::is_same_v<T, NullValue>) {
-      // pass
+      // empty body for null values
     } else if constexpr (T::column_type == ColumnType::TEXT) {
       auto begin = val.get().cbegin();
       auto end = val.get().cend();
@@ -63,12 +75,15 @@ void TableLeafCellPayload::writeTo(char* addr) const
       addr += val.get().size();
     } else {
       constexpr auto bytes = sizeof(typename T::underlying_type);
-      auto begin = reinterpret_cast<const char*>(&val.get());
-      auto end = begin + bytes;
-      std::copy(begin, end, addr);
+      offset_cast<typename T::underlying_type>(addr) = serialized(val.get());
       addr += bytes;
     }
   };
+
+  *addr++ = row_data.size();
+
+  for (auto& column_val : row_data)
+    std::visit(write_type, column_val);
 
   for (auto& column_val : row_data)
     std::visit(write_value, column_val);
@@ -98,63 +113,72 @@ TableLeafCellPayload TableLeafCellPayload::readFrom(const char* addr)
         break;
       case SerialTypeCode::TINYINT: {
         using ColumnValue = TinyIntColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::SMALLINT: {
         using ColumnValue = SmallIntColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::INT: {
         using ColumnValue = IntColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::BIGINT: {
         using ColumnValue = BigIntColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::FLOAT: {
         using ColumnValue = FloatColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::YEAR: {
         using ColumnValue = YearColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::TIME: {
         using ColumnValue = TimeColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::DATETIME: {
         using ColumnValue = DateTimeColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
       }
       case SerialTypeCode::DATE: {
         using ColumnValue = DateColumnValue;
-        auto val = offset_cast<ColumnValue::underlying_type>(addr);
+        auto val =
+          deserialized(offset_cast<ColumnValue::underlying_type>(addr));
         cell.row_data.emplace_back(ColumnValue(val));
         addr += sizeof(val);
         break;
@@ -286,7 +310,7 @@ TableLeafPage TableLeafPage::create(Table& table, PageNo page_no)
 {
   auto raw_data = std::make_unique<char[]>(table.pageLength());
   offset_cast<uint8_t>(raw_data.get()) =
-    static_cast<uint8_t>(PageType::TABLE_LEAF);
+    serialized(static_cast<uint8_t>(PageType::TABLE_LEAF));
   TableLeafPage page(table, page_no, std::move(raw_data));
   page.setCellCount(0);
   page.setCellContentAreaOffset(table.pageLength());

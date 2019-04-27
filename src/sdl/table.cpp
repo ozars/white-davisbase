@@ -62,7 +62,7 @@ std::variant<TableInteriorPage, TableLeafPage> Table::getPage(PageNo page_no)
   if (file_.fail())
     throw std::runtime_error("Error while reading page from file");
 
-  switch (PageType(raw_data[0])) {
+  switch (PageType(deserialized(raw_data[0]))) {
     case PageType::TABLE_LEAF:
       return TableLeafPage(*this, page_no, std::move(raw_data));
     case PageType::TABLE_INTERIOR:
@@ -83,6 +83,7 @@ void Table::appendRecord(const TableLeafCell& cell)
       new_root.setRightmostChildPageNo(new_page.pageNo());
       new_root.commit();
       setRootPageNo(new_root.pageNo());
+      setPageCount(pageCount() + 1);
     }
   };
 

@@ -16,7 +16,8 @@ CellOffset Page::cellOffset(CellIndex index) const
   if (index >= cellCount())
     throw std::logic_error("Requested cell index is out of range for the page");
 
-  auto offset = reinterpret_cast<const CellOffset*>(rawData() + 0x09)[index];
+  auto offset =
+    deserialized(reinterpret_cast<const CellOffset*>(rawData() + 0x09)[index]);
 
   if (offset >= table().pageLength())
     throw std::logic_error(
@@ -27,28 +28,29 @@ CellOffset Page::cellOffset(CellIndex index) const
 
 CellOffset Page::cellContentAreaOffset() const
 {
-  return offset_cast<CellOffset>(rawData(), 0x03);
+  return deserialized(offset_cast<CellOffset>(rawData(), 0x03));
 }
 
 void Page::setCellOffset(CellIndex index, CellOffset offset)
 {
-  if (offset >= table().pageLength())
-    throw std::logic_error(
-      "Cell offset for requested index is beyond page boundaries");
   if (index >= cellCount())
     throw std::logic_error("Requested cell index is out of range for the page");
 
-  reinterpret_cast<CellOffset*>(rawData() + 0x09)[index] = offset;
+  if (offset >= table().pageLength())
+    throw std::logic_error(
+      "Cell offset for requested index is beyond page boundaries");
+
+  reinterpret_cast<CellOffset*>(rawData() + 0x09)[index] = serialized(offset);
 }
 
 void Page::setCellContentAreaOffset(CellOffset offset)
 {
-  offset_cast<CellOffset>(rawData(), 0x03) = offset;
+  offset_cast<CellOffset>(rawData(), 0x03) = serialized(offset);
 }
 
 void Page::setCellCount(CellCount count)
 {
-  offset_cast<CellOffset>(rawData(), 0x01) = count;
+  offset_cast<CellOffset>(rawData(), 0x01) = serialized(count);
 }
 
 char* Page::rawData()
@@ -80,7 +82,7 @@ const char* Page::rawData() const
 
 CellCount Page::cellCount() const
 {
-  return offset_cast<CellOffset>(rawData(), 0x01);
+  return deserialized(offset_cast<CellOffset>(rawData(), 0x01));
 }
 
 void Page::setPageNo(PageNo page_no)

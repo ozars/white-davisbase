@@ -12,7 +12,15 @@ template<typename T>
 static inline auto open_new_file(T&& path)
 {
   using std::ios;
-  return std::fstream(std::forward<T>(path), ios::in | ios::out | ios::binary | ios::trunc);
+  return std::fstream(std::forward<T>(path),
+                      ios::in | ios::out | ios::binary | ios::trunc);
+}
+
+template<typename T>
+static inline auto open_existing_file(T&& path)
+{
+  using std::ios;
+  return std::fstream(std::forward<T>(path), ios::in | ios::out | ios::binary);
 }
 
 Database::Database(std::filesystem::path directory_path,
@@ -159,7 +167,7 @@ Table Database::getTable(std::string table_name)
   if (!fs::is_regular_file(path))
     throw std::runtime_error("Table file is not a regular file");
 
-  auto file = open_new_file(path);
+  auto file = open_existing_file(path);
   if (!file)
     throw std::runtime_error("Couldn't open table file");
 
