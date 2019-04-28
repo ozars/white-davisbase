@@ -48,7 +48,7 @@ PayloadLength TableLeafCellPayload::length() const
       return sizeof(typename T::underlying_type);
   };
 
-  size_t length = 0;
+  size_t length = 1 + row_data.size();
   for (auto& column_val : row_data)
     length += std::visit(get_length_of_data, column_val);
 

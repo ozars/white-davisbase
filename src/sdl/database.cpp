@@ -70,7 +70,7 @@ Database::Schema Database::initializeSchema()
             default_page_length_);
 
     auto columns_schema =
-      Table(*this, columns_schema_name, open_existing_file(tables_path), 0, 0,
+      Table(*this, columns_schema_name, open_existing_file(columns_path), 0, 0,
             0, default_page_length_);
 
     PageNo root_page_no;
