@@ -53,7 +53,6 @@ std::ostream& operator<<(std::ostream& os,
   return os << int(val.get());
 }
 
-
 std::ostream& operator<<(std::ostream& os,
                          const ColumnValue<ColumnType::YEAR>& val)
 {

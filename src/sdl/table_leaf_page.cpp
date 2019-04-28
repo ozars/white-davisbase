@@ -4,11 +4,6 @@
 
 namespace white::davisbase::sdl {
 
-TableLeafPage::TableLeafPage(Table& table, PageNo page_no,
-                             std::unique_ptr<char[]> raw_data)
-  : Page(table, page_no, std::move(raw_data))
-{}
-
 constexpr PayloadLength TableLeafCellHeader::length()
 {
   return sizeof(payload_length) + sizeof(row_id);
@@ -239,6 +234,11 @@ std::ostream& operator<<(std::ostream& os, const TableLeafCell& cell)
   return os << "TableLeafCell(" << static_cast<const TableLeafCellHeader&>(cell)
             << ", " << static_cast<const TableLeafCellPayload&>(cell) << ")";
 }
+
+TableLeafPage::TableLeafPage(Table& table, PageNo page_no,
+                             std::unique_ptr<char[]> raw_data)
+  : Page(table, page_no, std::move(raw_data))
+{}
 
 RowId TableLeafPage::minRowId() const
 {

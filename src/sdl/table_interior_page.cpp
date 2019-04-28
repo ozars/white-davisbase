@@ -135,7 +135,8 @@ TableInteriorPage TableInteriorPage::create(Table& table, PageNo page_no)
 std::ostream& operator<<(std::ostream& os, const TableInteriorPage& page)
 {
   return os << "TableInteriorPage(" << static_cast<const Page&>(page)
-            << ", rightmost_child_page_no=" << page.rightmostChildPageNo() << ")";
+            << ", rightmost_child_page_no=" << page.rightmostChildPageNo()
+            << ")";
 }
 
 } // namespace white::davisbase::sdl

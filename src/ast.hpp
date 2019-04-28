@@ -10,8 +10,8 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include "common.hpp"
-#include "util.hpp"
 #include "sdl/database.hpp"
+#include "util.hpp"
 
 namespace white::davisbase::ast {
 

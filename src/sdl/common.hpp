@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 namespace white::davisbase::sdl {
@@ -29,7 +29,7 @@ enum class PageType : uint8_t
 
 /* I am looking at you std::endian... in 2019. */
 static const bool is_machine_big_endian = false;
-  // (*reinterpret_cast<const uint8_t*>((uint16_t){0x00FF}) == 0x00);
+// (*reinterpret_cast<const uint8_t*>((uint16_t){0x00FF}) == 0x00);
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T>>* = nullptr>
 static constexpr T endian_reverse(T x) noexcept
