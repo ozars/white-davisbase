@@ -15,7 +15,8 @@ void Command::execute(Database& database)
 
 void ShowTablesCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  database.mapOverTables(
+    [&](TableLeafCell cell) { std::cout << cell.row_data[0] << std::endl; });
 }
 
 void DropTableCommand::execute(Database& database)
