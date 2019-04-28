@@ -2,49 +2,53 @@
 
 #include <iostream>
 
+#include "sdl/database.hpp"
+
 namespace white::davisbase::ast {
 
-void Command::execute()
+using sdl::Database;
+
+void Command::execute(Database& database)
 {
-  std::visit([](auto&& arg) { arg.execute(); }, command);
+  std::visit([&](auto&& arg) { arg.execute(database); }, command);
 }
 
-void ShowTablesCommand::execute()
-{
-  std::cout << *this << std::endl;
-}
-
-void DropTableCommand::execute()
+void ShowTablesCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void CreateTableCommand::execute()
+void DropTableCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void InsertIntoCommand::execute()
+void CreateTableCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void SelectCommand::execute()
+void InsertIntoCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void DeleteFromCommand::execute()
+void SelectCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void UpdateCommand::execute()
+void DeleteFromCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }
 
-void CreateIndexCommand::execute()
+void UpdateCommand::execute(Database& database)
+{
+  std::cout << *this << std::endl;
+}
+
+void CreateIndexCommand::execute(Database& database)
 {
   std::cout << *this << std::endl;
 }

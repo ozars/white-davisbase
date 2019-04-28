@@ -60,8 +60,8 @@ TEST_CASE("Parse dropping a table", "[parser][drop_table]")
 
 TEST_CASE("Parse creating table", "[parser][create_table]")
 {
-  using white::davisbase::ast::ColumnType;
   using white::davisbase::ast::CreateTableCommand;
+  using white::davisbase::common::ColumnType;
 
   Parser parser;
   Command parsed_cmd;
@@ -112,11 +112,11 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
       CHECK(column.name == column_name_prefix);
       CHECK(column.type == type);
 
-      CHECK_FALSE(column.modifiers.primary_key.has_value());
-      CHECK_FALSE(column.modifiers.unique.has_value());
-      CHECK_FALSE(column.modifiers.is_null.has_value());
-      CHECK_FALSE(column.modifiers.not_null.has_value());
-      CHECK_FALSE(column.modifiers.auto_increment.has_value());
+      CHECK_FALSE(column.modifiers.primary_key);
+      CHECK_FALSE(column.modifiers.unique);
+      CHECK_FALSE(column.modifiers.is_null);
+      CHECK_FALSE(column.modifiers.not_null);
+      CHECK_FALSE(column.modifiers.auto_increment);
       CHECK_FALSE(column.modifiers.default_value.has_value());
     }
 
@@ -154,11 +154,11 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.name == column_name_prefix + std::to_string(i));
         CHECK(column.type == types[i]);
 
-        CHECK_FALSE(column.modifiers.primary_key.has_value());
-        CHECK_FALSE(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
-        CHECK_FALSE(column.modifiers.auto_increment.has_value());
+        CHECK_FALSE(column.modifiers.primary_key);
+        CHECK_FALSE(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
+        CHECK_FALSE(column.modifiers.auto_increment);
         CHECK_FALSE(column.modifiers.default_value.has_value());
       }
     }
@@ -166,72 +166,73 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
 
   SECTION("Modifier tests")
   {
-    using white::davisbase::ast::Column;
-    using white::davisbase::ast::ColumnModifiers;
+    using white::davisbase::common::ColumnDefinition;
+    using white::davisbase::common::ColumnModifiers;
 
-    using modifiers_list_t = tuple<string, std::function<bool(const Column&)>>;
+    using modifiers_list_t =
+      tuple<string, std::function<bool(const ColumnDefinition&)>>;
     auto modifiers_list = make_array<modifiers_list_t>(
       tuple{string("PRIMARY KEY"),
-            [](const Column& column) {
-              return column.modifiers.primary_key.has_value();
+            [](const ColumnDefinition& column) {
+              return column.modifiers.primary_key;
             }},
       tuple{string("AUTOINCREMENT"),
-            [](const Column& column) {
-              return column.modifiers.auto_increment.has_value();
+            [](const ColumnDefinition& column) {
+              return column.modifiers.auto_increment;
             }},
       tuple{string("NOT NULL"),
-            [](const Column& column) {
-              return column.modifiers.not_null.has_value();
+            [](const ColumnDefinition& column) {
+              return column.modifiers.not_null;
             }},
       tuple{string("NULL"),
-            [](const Column& column) {
-              return column.modifiers.is_null.has_value();
+            [](const ColumnDefinition& column) {
+              return column.modifiers.is_null;
             }},
       tuple{string("DEFAULT 'omer'"),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "omer";
             }},
       tuple{string("DEFAULT '\\'omer\\''"),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "'omer'";
             }},
       tuple{string("DEFAULT \"ozarslan\""),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "ozarslan";
             }},
       tuple{string("DEFAULT \"\\\"ozarslan\\\"\""),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<string>(def.value().literal.value) &&
                      get<string>(def.value().literal.value) == "\"ozarslan\"";
             }},
       tuple{string("DEFAULT 1337"),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<long long>(def.value().literal.value) &&
                      get<long long>(def.value().literal.value) == 1337;
             }},
       tuple{string("DEFAULT 13.37"),
-            [](const Column& column) {
+            [](const ColumnDefinition& column) {
               auto& def = column.modifiers.default_value;
               return def.has_value() &&
                      holds_alternative<long double>(
                        def.value().literal.value) &&
                      get<long double>(def.value().literal.value) == 13.37L;
             }},
-      tuple{string("UNIQUE"), [](const Column& column) {
-              return column.modifiers.unique.has_value();
+      tuple{string("UNIQUE"), [](const ColumnDefinition& column) {
+              return column.modifiers.unique;
             }});
 
     SECTION("Simple cases")
@@ -375,12 +376,12 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.name == "id");
         CHECK(column.type == ColumnType::INT);
 
-        CHECK(column.modifiers.primary_key.has_value());
-        CHECK(column.modifiers.auto_increment.has_value());
+        CHECK(column.modifiers.primary_key);
+        CHECK(column.modifiers.auto_increment);
 
-        CHECK_FALSE(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
+        CHECK_FALSE(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
         CHECK_FALSE(column.modifiers.default_value.has_value());
       }
       {
@@ -390,13 +391,13 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
         CHECK(column.type == ColumnType::TEXT);
 
         CHECK(column.modifiers.default_value.has_value());
-        CHECK(column.modifiers.unique.has_value());
-        CHECK_FALSE(column.modifiers.primary_key.has_value());
-        CHECK_FALSE(column.modifiers.is_null.has_value());
-        CHECK_FALSE(column.modifiers.not_null.has_value());
-        CHECK_FALSE(column.modifiers.auto_increment.has_value());
+        CHECK(column.modifiers.unique);
+        CHECK_FALSE(column.modifiers.primary_key);
+        CHECK_FALSE(column.modifiers.is_null);
+        CHECK_FALSE(column.modifiers.not_null);
+        CHECK_FALSE(column.modifiers.auto_increment);
 
-        using white::davisbase::ast::LiteralValue;
+        using white::davisbase::common::LiteralValue;
 
         LiteralValue literal;
         REQUIRE_NOTHROW(literal =
@@ -409,8 +410,8 @@ TEST_CASE("Parse creating table", "[parser][create_table]")
 
 TEST_CASE("Parse inserting into table", "[parser][insert_into]")
 {
-  using white::davisbase::ast::ColumnType;
   using white::davisbase::ast::InsertIntoCommand;
+  using white::davisbase::common::ColumnType;
 
   Parser parser;
   Command parsed_cmd;
@@ -532,9 +533,9 @@ TEST_CASE("Parse inserting into table", "[parser][insert_into]")
 
 TEST_CASE("Parse select from table", "[parser][select]")
 {
-  using white::davisbase::ast::OperatorType;
   using white::davisbase::ast::SelectCommand;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -658,8 +659,8 @@ TEST_CASE("Parse select from table", "[parser][select]")
 TEST_CASE("Parse delete from table", "[parser][delete_from]")
 {
   using white::davisbase::ast::DeleteFromCommand;
-  using white::davisbase::ast::OperatorType;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -720,10 +721,10 @@ TEST_CASE("Parse delete from table", "[parser][delete_from]")
 
 TEST_CASE("Parse updating a table", "[parser][update]")
 {
-  using white::davisbase::ast::ColumnType;
-  using white::davisbase::ast::OperatorType;
   using white::davisbase::ast::UpdateCommand;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::ColumnType;
+  using white::davisbase::common::OperatorType;
 
   Parser parser;
   Command parsed_cmd;
@@ -841,8 +842,8 @@ TEST_CASE("Parse creating index command", "[parser][create_index]")
 
 TEST_CASE("Parse WHERE Clause", "[parser][where_clause]")
 {
-  using white::davisbase::ast::OperatorType;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::OperatorType;
   using white::davisbase::parser::StringQueryGrammar;
   using white::util::test_phrase_parser_attr;
 
@@ -905,9 +906,9 @@ TEST_CASE("Printing commands", "[command][debug][print]")
   using white::davisbase::ast::SelectCommand;
   using white::davisbase::ast::ShowTablesCommand;
 
-  using white::davisbase::ast::LiteralValue;
-  using white::davisbase::ast::OperatorType;
   using white::davisbase::ast::WhereClause;
+  using white::davisbase::common::LiteralValue;
+  using white::davisbase::common::OperatorType;
 
   std::stringstream ss;
   WhereClause where{"col1", OperatorType::EQUAL, LiteralValue{"test"}};

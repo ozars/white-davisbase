@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
 # Output executables to bin directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -20,7 +21,9 @@ set(TESTS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/tests")
 set(CATCH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/Catch2")
 
 # Set source file names
-set(DAVISBASE_SOURCE_FILES main.cpp parser.hpp parser.cpp ast.hpp ast.cpp util.hpp)
+set(DAVISBASE_SOURCE_FILES main.cpp parser.hpp parser.cpp ast.hpp ast.cpp
+    util.hpp sdl/database.cpp sdl/page.cpp sdl/table.cpp sdl/table_leaf_page.cpp
+    sdl/table_interior_page.cpp sdl/column_value.cpp)
 set(TESTS_SOURCE_FILES main.test.cpp parser.test.cpp utility.test.hpp)
 
 # Boost is necessary for parser
@@ -69,7 +72,7 @@ if(CODE_COVERAGE)
 endif()
 
 target_include_directories(davisbase PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(davisbase PUBLIC ${Boost_LIBRARIES} coverage_config)
+target_link_libraries(davisbase PUBLIC stdc++fs ${Boost_LIBRARIES} coverage_config)
 
 # Configure tests if enabled
 if (TESTING_ENABLED)
