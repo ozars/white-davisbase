@@ -25,14 +25,19 @@ static inline auto open_existing_file(T&& path)
 
 Database::Database(std::filesystem::path directory_path,
                    PageLength default_page_length)
-  : directory_path_(
+  : bootstrapping_schema_(true)
+  , directory_path_(
       fs::exists(directory_path) && fs::is_directory(directory_path)
         ? directory_path
         : throw std::runtime_error(
             "Database directory not found or it's not a directory."))
   , default_page_length_(default_page_length)
   , schema_{initializeSchema()}
-{}
+{
+  bootstrapping_schema_ = false;
+  std::cerr << schema_.tables << std::endl;
+  std::cerr << schema_.columns << std::endl;
+}
 
 Database::Schema Database::initializeSchema()
 {
@@ -81,16 +86,16 @@ Database::Schema Database::initializeSchema()
     getTableInfo(tables_schema_name, root_page_no, page_count, next_row_id,
                  page_length, tables_schema);
 
-    tables_schema.setRootPageNo(root_page_no);
-    tables_schema.setPageCount(page_count);
-    tables_schema.setNextRowId(next_row_id);
+    tables_schema =
+      Table(*this, tables_schema_name, open_existing_file(tables_path),
+            root_page_no, next_row_id, page_count, page_length);
 
     getTableInfo(columns_schema_name, root_page_no, page_count, next_row_id,
                  page_length, tables_schema);
 
-    columns_schema.setRootPageNo(root_page_no);
-    columns_schema.setPageCount(page_count);
-    columns_schema.setNextRowId(next_row_id);
+    columns_schema =
+      Table(*this, columns_schema_name, open_existing_file(tables_path),
+            root_page_no, next_row_id, page_count, page_length);
 
     return {std::move(tables_schema), std::move(columns_schema)};
   }
@@ -195,25 +200,68 @@ void Database::getTableInfo(const std::string& table_name, PageNo& root_page_no,
                             PageCount& page_count, RowId& next_row_id,
                             PageLength& page_length, Table& tables_schema)
 {
-  using std::get;
-
-  root_page_no = 0;
-
+  bool found = false;
   auto page = tables_schema.leftmostLeafPage();
-  while (true) {
-    for (CellIndex i = 0; i < page.cellCount(); i++) {
-      auto cell = page.getCell(i);
-      if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
-        page_count = get<IntColumnValue>(cell.row_data[2]).get();
-        next_row_id = get<IntColumnValue>(cell.row_data[3]).get();
-        page_length = get<SmallIntColumnValue>(cell.row_data[4]).get();
-        return;
-      }
+
+  tables_schema.mapOverRecords([&](TableLeafCell cell) {
+    using std::get;
+    if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+      root_page_no = get<IntColumnValue>(cell.row_data[1]).get();
+      page_count = get<IntColumnValue>(cell.row_data[2]).get();
+      next_row_id = get<IntColumnValue>(cell.row_data[3]).get();
+      page_length = get<SmallIntColumnValue>(cell.row_data[4]).get();
+      found = true;
+      return false;
     }
-    if (!page.hasRightSiblingPage())
-      throw std::runtime_error("Table entry is not found on schema");
-    page = page.rightSiblingPage();
-  }
+    return true;
+  });
+
+  if (!found)
+    throw std::runtime_error("Table entry is not found on schema");
+}
+
+void Database::updatePageCount(const std::string& table_name,
+                               PageCount page_count)
+{
+  if (bootstrapping_schema_)
+    return;
+  using std::get;
+  schema_.tables.mapOverRecords([&](TableLeafPage& page, TableLeafCell cell) {
+    if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+      get<IntColumnValue>(cell.row_data[2]) = page_count;
+      page.updateRecord(cell);
+      return false;
+    }
+    return true;
+  });
+}
+
+void Database::updateNextRowId(const std::string& table_name, RowId next_row_id)
+{
+  if (bootstrapping_schema_)
+    return;
+  using std::get;
+  schema_.tables.mapOverRecords([&](TableLeafPage& page, TableLeafCell cell) {
+    if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+      get<IntColumnValue>(cell.row_data[3]) = next_row_id;
+      page.updateRecord(cell);
+      return false;
+    }
+    return true;
+  });
+}
+
+bool Database::hasTable(const std::string& table_name)
+{
+  bool found = false;
+  schema_.tables.mapOverRecords([&](TableLeafCell cell) {
+    if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+      found = true;
+      return false;
+    }
+    return true;
+  });
+  return found;
 }
 
 Table Database::createTable(const std::string& table_name)

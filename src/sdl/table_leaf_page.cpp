@@ -268,10 +268,27 @@ TableLeafPage TableLeafPage::rightSiblingPage()
   return std::get<TableLeafPage>(table().getPage(page_no));
 }
 
+TableLeafCell TableLeafPage::getCellByOffset(CellOffset offset) const
+{
+  auto page_length = table().pageLength();
+  auto header_end = offset + TableLeafCellHeader::length();
+  if (header_end > page_length)
+    throw std::runtime_error(
+      "Leaf cell header overflows from the page poundary");
+  auto header = TableLeafCellHeader::readFrom(rawData() + offset);
+  if (header_end + header.payload_length > page_length)
+    throw std::runtime_error(
+      "Leaf cell payload overflows from the page poundary");
+  /* TODO: This part is still not safe, since cell may not tell actual payload
+   * length. */
+  auto payload = TableLeafCellPayload::readFrom(rawData() + header_end);
+  return TableLeafCell(header, payload);
+}
+
 TableLeafCell TableLeafPage::getCell(CellIndex index) const
 {
   auto offset = cellOffset(index);
-  return TableLeafCell::readFrom(rawData() + offset);
+  return getCellByOffset(offset);
 }
 
 void TableLeafPage::appendCell(const TableLeafCell& cell)
@@ -293,14 +310,33 @@ bool TableLeafPage::hasEnoughSpace(const TableLeafCell& cell) const
   return end_of_header + space_for_new_record < cellContentAreaOffset();
 }
 
-void TableLeafPage::updateRecord(const TableLeafCell&)
+void TableLeafPage::updateRecord(const TableLeafCell& cell)
 {
-  /* TODO */
+  int cell_count = cellCount();
+  for (CellIndex i = 0; i < cell_count; i++) {
+    auto offset = cellOffset(i);
+    auto cell_i = getCellByOffset(offset);
+    if (cell_i.row_id == cell.row_id) {
+      if (cell.length() > cell_i.length())
+        throw std::runtime_error(
+          "Currently expanding size of existing cells aren't supported");
+      cell.writeTo(rawData() + offset);
+      commit();
+      return;
+    }
+  }
+  throw std::runtime_error(
+    "No matching row_id is found for cell in this leaf page");
 }
 
 std::optional<TableLeafPage> TableLeafPage::appendRecord(
   const TableLeafCell& cell)
 {
+  if (cellCount() > 0) {
+    if (getCell(cellCount() - 1).row_id >= cell.row_id)
+      throw std::logic_error("Inserted leaf cell has decreasing row_id");
+  }
+
   if (hasEnoughSpace(cell)) {
     appendCell(cell);
     commit();

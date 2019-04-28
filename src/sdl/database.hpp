@@ -20,6 +20,7 @@ private:
   static constexpr PageCount INITIAL_PAGE_COUNT = 1;
   static constexpr RowId INITIAL_ROW_ID = 1;
 
+  bool bootstrapping_schema_;
   std::filesystem::path directory_path_;
   PageLength default_page_length_;
 
@@ -44,6 +45,10 @@ public:
     std::filesystem::path directory_path = std::filesystem::current_path(),
     PageLength default_page_length = DEFAULT_PAGE_LENGTH);
 
+  void updatePageCount(const std::string& table_name, PageCount page_count);
+  void updateNextRowId(const std::string& table_name, RowId next_row_id);
+
+  bool hasTable(const std::string& table_name);
   Table createTable(const std::string& table_name);
   Table getTable(const std::string& table_name);
   // void removeTable(std::string table_name);

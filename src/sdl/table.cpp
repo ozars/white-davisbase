@@ -50,11 +50,13 @@ void Table::setRootPageNo(PageNo page_no)
 void Table::setNextRowId(RowId next_row_id)
 {
   next_row_id_ = next_row_id;
+  database_->updateNextRowId(name_, next_row_id);
 }
 
 void Table::setPageCount(PageCount count)
 {
   page_count_ = count;
+  database_->updatePageCount(name_, count);
 }
 
 std::variant<TableInteriorPage, TableLeafPage> Table::getPage(PageNo page_no)
@@ -134,12 +136,17 @@ void Table::commitPage(const Page& page)
 
 TableLeafPage Table::leftmostLeafPage()
 {
-  using std::holds_alternative;
+  return leafPageByRowId(0);
+}
+
+TableLeafPage Table::leafPageByRowId(RowId row_id)
+{
   using std::get;
+  using std::holds_alternative;
 
   auto page = getPage(rootPageNo());
   while (holds_alternative<TableInteriorPage>(page))
-    page = getPage(get<TableInteriorPage>(page).getCell(0).left_child_page_no);
+    page = getPage(get<TableInteriorPage>(page).getChildPageNoByRowId(row_id));
   return std::move(get<TableLeafPage>(page));
 }
 

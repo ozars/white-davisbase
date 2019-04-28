@@ -93,6 +93,9 @@ public:
 
 class TableLeafPage : public Page
 {
+private:
+  TableLeafCell getCellByOffset(CellOffset offset) const;
+
 public:
   TableLeafPage(Table& table, PageNo page_no, std::unique_ptr<char[]> raw_data);
 
@@ -207,6 +210,7 @@ public:
   void commitPage(const Page& page);
 
   TableLeafPage leftmostLeafPage();
+  TableLeafPage leafPageByRowId(RowId row_id);
 
   template<typename Mapper>
   void mapOverLeafPages(Mapper&& mapper);
