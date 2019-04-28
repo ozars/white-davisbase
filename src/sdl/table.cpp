@@ -4,6 +4,12 @@
 
 namespace white::davisbase::sdl {
 
+std::ostream& operator<<(std::ostream& os, const RowData& row_data)
+{
+  using util::join;
+  return os << "RowData([" << join(row_data, ", ") << "])";
+}
+
 Table::Table(Database& database, std::string name, std::fstream file,
              PageNo root_page_no, RowId next_row_id, PageCount page_count,
              PageLength page_length)
@@ -140,6 +146,15 @@ Table Table::create(Database& database, std::string name, std::fstream file,
     Table(database, name, std::move(file), 0, next_row_id, 1, page_length);
   TableLeafPage::create(table, 0).commit();
   return table;
+}
+
+std::ostream& operator<<(std::ostream& os, const Table& table)
+{
+  return os << "Table(name=" << table.name_
+            << ", root_page_no=" << table.rootPageNo()
+            << ", next_row_id=" << table.nextRowId()
+            << ", page_count=" << table.pageCount()
+            << ", page_length=" << table.pageLength() << ")";
 }
 
 } // namespace white::davisbase::sdl

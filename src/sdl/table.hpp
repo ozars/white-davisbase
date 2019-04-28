@@ -11,6 +11,8 @@ namespace white::davisbase::sdl {
 
 using RowData = std::vector<ColumnValueVariant>;
 
+std::ostream& operator<<(std::ostream& os, const RowData& row_data);
+
 struct TableInteriorCell
 {
   PageNo left_child_page_no;
@@ -19,6 +21,9 @@ struct TableInteriorCell
   static constexpr PayloadLength length();
   void writeTo(char* addr) const;
   static TableInteriorCell readFrom(const char* addr);
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const TableInteriorCell& cell);
 };
 
 struct TableLeafCellHeader
@@ -29,6 +34,9 @@ struct TableLeafCellHeader
   static constexpr PayloadLength length();
   void writeTo(char* addr) const;
   static TableLeafCellHeader readFrom(const char* addr);
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const TableLeafCellHeader& header);
 };
 
 struct TableLeafCellPayload
@@ -38,6 +46,9 @@ struct TableLeafCellPayload
   PayloadLength length() const;
   void writeTo(char* addr) const;
   static TableLeafCellPayload readFrom(const char* addr);
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const TableLeafCellPayload& payload);
 };
 
 struct TableLeafCell
@@ -50,6 +61,8 @@ struct TableLeafCell
   PayloadLength length() const;
   void writeTo(char* addr) const;
   static TableLeafCell readFrom(const char* addr);
+
+  friend std::ostream& operator<<(std::ostream& os, const TableLeafCell& cell);
 };
 
 class TableInteriorPage : public Page
@@ -73,6 +86,9 @@ public:
   std::optional<TableInteriorPage> appendRecord(const TableLeafCell& cell);
 
   static TableInteriorPage create(Table& table, PageNo page_no);
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const TableInteriorPage& page);
 };
 
 class TableLeafPage : public Page
@@ -96,6 +112,8 @@ public:
   std::optional<TableLeafPage> appendRecord(const TableLeafCell& cell);
 
   static TableLeafPage create(Table& table, PageNo page_no);
+
+  friend std::ostream& operator<<(std::ostream& os, const TableLeafPage& page);
 };
 
 class Database;
@@ -136,6 +154,8 @@ public:
 
   static Table create(Database& database, std::string name, std::fstream file,
                       RowId next_row_id, PageLength page_length);
+
+  friend std::ostream& operator<<(std::ostream& os, const Table& table);
 };
 
 } // namespace white::davisbase::sdl

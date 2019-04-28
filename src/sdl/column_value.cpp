@@ -42,15 +42,36 @@ ColumnValue<T>::operator underlying_type() const
 }
 
 template<ColumnType T>
-std::ostream& operator<<(std::ostream os, const ColumnValue<T>& val)
+std::ostream& operator<<(std::ostream& os, const ColumnValue<T>& val)
 {
   return os << val.get();
 }
 
-std::ostream& operator<<(std::ostream os,
+std::ostream& operator<<(std::ostream& os,
+                         const ColumnValue<ColumnType::TINYINT>& val)
+{
+  return os << int(val.get());
+}
+
+
+std::ostream& operator<<(std::ostream& os,
                          const ColumnValue<ColumnType::YEAR>& val)
 {
   return os << 2000 + val.get();
+}
+
+std::ostream& operator<<(std::ostream& os, const ColumnValueVariant& variant)
+{
+  using common::NullValue;
+  std::visit(
+    [&os](auto& col) {
+      if constexpr (std::is_same_v<NullValue, std::decay_t<decltype(col)>>)
+        os << "NULL";
+      else
+        os << col;
+    },
+    variant);
+  return os;
 }
 
 /* TODO: Specialize operator<< for TIME, DATETIME and DATE. */

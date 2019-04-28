@@ -41,7 +41,7 @@ public:
 };
 
 template<common::ColumnType T>
-std::ostream& operator<<(std::ostream os, const ColumnValue<T>& val);
+std::ostream& operator<<(std::ostream& os, const ColumnValue<T>& val);
 
 template<common::ColumnType T>
 template<typename CastedType>
@@ -90,6 +90,8 @@ using ColumnValueVariant = std::variant<
   ColumnValue<common::ColumnType::DATE>,
   ColumnValue<common::ColumnType::TEXT>>;
 // clang-format on
+
+std::ostream& operator<<(std::ostream& os, const ColumnValueVariant& variant);
 
 using TinyIntColumnValue = ColumnValue<common::ColumnType::TINYINT>;
 using SmallIntColumnValue = ColumnValue<common::ColumnType::SMALLINT>;

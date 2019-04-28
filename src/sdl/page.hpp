@@ -37,6 +37,7 @@ public:
   void setRawData(std::unique_ptr<char[]> raw_data);
 
   void commit();
+  friend std::ostream& operator<<(std::ostream& os, const Page& page);
 };
 
 } // namespace white::davisbase::sdl

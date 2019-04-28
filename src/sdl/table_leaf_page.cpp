@@ -1,5 +1,7 @@
 #include "table.hpp"
 
+#include <ostream>
+
 namespace white::davisbase::sdl {
 
 TableLeafPage::TableLeafPage(Table& table, PageNo page_no,
@@ -23,6 +25,12 @@ TableLeafCellHeader TableLeafCellHeader::readFrom(const char* addr)
   auto payload_length = deserialized(offset_cast<PayloadLength>(addr));
   auto row_id = deserialized(offset_cast<RowId>(addr, sizeof(payload_length)));
   return {payload_length, row_id};
+}
+
+std::ostream& operator<<(std::ostream& os, const TableLeafCellHeader& header)
+{
+  return os << "TableLeafCellHeader(payload_length=" << header.payload_length
+            << ", row_id=" << header.row_id << ")";
 }
 
 PayloadLength TableLeafCellPayload::length() const
@@ -197,6 +205,12 @@ TableLeafCellPayload TableLeafCellPayload::readFrom(const char* addr)
   return cell;
 }
 
+std::ostream& operator<<(std::ostream& os, const TableLeafCellPayload& payload)
+{
+  return os << "TableLeafCellPayload(actual_length=" << payload.length()
+            << ", row_data=" << payload.row_data << ")";
+}
+
 TableLeafCell::TableLeafCell(const TableLeafCellHeader& header,
                              const TableLeafCellPayload& payload)
   : TableLeafCellHeader(header)
@@ -218,6 +232,12 @@ TableLeafCell TableLeafCell::readFrom(const char* addr)
 {
   return {TableLeafCellHeader::readFrom(addr),
           TableLeafCellPayload::readFrom(addr + TableLeafCellHeader::length())};
+}
+
+std::ostream& operator<<(std::ostream& os, const TableLeafCell& cell)
+{
+  return os << "TableLeafCell(" << static_cast<const TableLeafCellHeader&>(cell)
+            << ", " << static_cast<const TableLeafCellPayload&>(cell) << ")";
 }
 
 RowId TableLeafPage::minRowId() const
@@ -316,6 +336,12 @@ TableLeafPage TableLeafPage::create(Table& table, PageNo page_no)
   page.setCellContentAreaOffset(table.pageLength());
   page.setRightSiblingPageNo(NULL_PAGE_NO);
   return page;
+}
+
+std::ostream& operator<<(std::ostream& os, const TableLeafPage& page)
+{
+  return os << "TableLeafPage(" << static_cast<const Page&>(page)
+            << ", right_sibling_page_no=" << page.rightSiblingPageNo() << ")";
 }
 
 } // namespace white::davisbase::sdl

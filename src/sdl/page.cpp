@@ -1,4 +1,8 @@
 #include "page.hpp"
+
+#include <iomanip>
+#include <ostream>
+
 #include "table.hpp"
 
 namespace white::davisbase::sdl {
@@ -98,6 +102,15 @@ void Page::setRawData(std::unique_ptr<char[]> raw_data)
 void Page::commit()
 {
   table().commitPage(*this);
+}
+
+std::ostream& operator<<(std::ostream& os, const Page& page)
+{
+  return os << "Page(type=" << std::hex << std::setfill('0') << std::setw(2)
+            << int(page.rawData()[0]) << std::dec << std::setfill(' ')
+            << ", page_no=" << page.pageNo()
+            << ", cell_count=" << page.cellCount()
+            << ", content_area_offset=" << page.cellContentAreaOffset() << ")";
 }
 
 } // namespace white::davisbase::sdl
