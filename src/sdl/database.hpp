@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 
 #include "common.hpp"
 #include "table.hpp"
@@ -48,9 +49,8 @@ public:
   void updatePageCount(const std::string& table_name, PageCount page_count);
   void updateNextRowId(const std::string& table_name, RowId next_row_id);
 
-  bool hasTable(const std::string& table_name);
   Table createTable(const std::string& table_name);
-  Table getTable(const std::string& table_name);
+  std::optional<Table> getTable(const std::string& table_name);
   // void removeTable(std::string table_name);
 };
 

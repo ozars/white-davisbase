@@ -251,19 +251,6 @@ void Database::updateNextRowId(const std::string& table_name, RowId next_row_id)
   });
 }
 
-bool Database::hasTable(const std::string& table_name)
-{
-  bool found = false;
-  schema_.tables.mapOverRecords([&](TableLeafCell cell) {
-    if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
-      found = true;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
 Table Database::createTable(const std::string& table_name)
 {
   static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
@@ -288,9 +275,21 @@ Table Database::createTable(const std::string& table_name)
   return table;
 }
 
-Table Database::getTable(const std::string& table_name)
+std::optional<Table> Database::getTable(const std::string& table_name)
 {
   static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
+
+  bool found = false;
+  schema_.tables.mapOverRecords([&](TableLeafCell cell) {
+    if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+      found = true;
+      return false;
+    }
+    return true;
+  });
+
+  if (!found)
+    return std::nullopt;
 
   if (!fs::exists(path))
     throw std::runtime_error("Couldn't find table file");
