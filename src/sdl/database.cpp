@@ -168,11 +168,11 @@ Database::Schema Database::initializeSchema()
 
   auto tables_schema =
     Table::create(*this, tables_schema_name, std::move(tables_file),
-                  default_tables.size(), default_page_length_);
+                  default_tables.size() + 1, default_page_length_);
 
   auto columns_schema =
     Table::create(*this, columns_schema_name, std::move(columns_file),
-                  default_columns.size(), default_page_length_);
+                  default_columns.size() + 1, default_page_length_);
 
   for (auto& table_info : default_tables)
     append_table_to_schema(tables_schema, table_info);

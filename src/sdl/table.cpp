@@ -108,6 +108,8 @@ void Table::appendRecord(const RowData& rows)
   const TableLeafCellHeader header{payload_length, nextRowId()};
 
   appendRecord(TableLeafCell(header, payload));
+
+  setNextRowId(nextRowId() + 1);
 }
 
 void Table::appendRecord(RowData&& rows)
@@ -117,6 +119,8 @@ void Table::appendRecord(RowData&& rows)
   const TableLeafCellHeader header{payload_length, nextRowId()};
 
   appendRecord(TableLeafCell(header, payload));
+
+  setNextRowId(nextRowId() + 1);
 }
 
 void Table::commitPage(const Page& page)

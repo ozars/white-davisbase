@@ -93,6 +93,8 @@ std::optional<TableInteriorPage> TableInteriorPage::appendRecord(
         TableInteriorCell{rightmostChildPageNo(), child_split_page.minRowId()};
       if (hasEnoughSpace()) {
         appendCell(cell);
+        setRightmostChildPageNo(child_split_page.pageNo());
+        commit();
         return std::nullopt;
       }
       auto split_page_no = table().pageCount();
@@ -133,7 +135,7 @@ TableInteriorPage TableInteriorPage::create(Table& table, PageNo page_no)
 std::ostream& operator<<(std::ostream& os, const TableInteriorPage& page)
 {
   return os << "TableInteriorPage(" << static_cast<const Page&>(page)
-            << ", right_sibling_page_no=" << page.rightmostChildPageNo() << ")";
+            << ", rightmost_child_page_no=" << page.rightmostChildPageNo() << ")";
 }
 
 } // namespace white::davisbase::sdl
