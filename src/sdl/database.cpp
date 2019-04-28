@@ -226,7 +226,7 @@ void Database::updatePageCount(const std::string& table_name,
   if (bootstrapping_schema_)
     return;
   using std::get;
-  schema_.tables.mapOverRecords([&](TableLeafPage& page, TableLeafCell cell) {
+  mapOverTables([&](TableLeafPage& page, TableLeafCell cell) {
     if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
       get<IntColumnValue>(cell.row_data[2]) = page_count;
       page.updateRecord(cell);
@@ -236,17 +236,12 @@ void Database::updatePageCount(const std::string& table_name,
   });
 }
 
-auto& Database::getSchema()
-{
-  return schema_;
-}
-
 void Database::updateNextRowId(const std::string& table_name, RowId next_row_id)
 {
   if (bootstrapping_schema_)
     return;
   using std::get;
-  schema_.tables.mapOverRecords([&](TableLeafPage& page, TableLeafCell cell) {
+  mapOverTables([&](TableLeafPage& page, TableLeafCell cell) {
     if (get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
       get<IntColumnValue>(cell.row_data[3]) = next_row_id;
       page.updateRecord(cell);

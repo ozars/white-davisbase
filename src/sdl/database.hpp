@@ -46,14 +46,21 @@ public:
     std::filesystem::path directory_path = std::filesystem::current_path(),
     PageLength default_page_length = DEFAULT_PAGE_LENGTH);
 
-  auto& getSchema();
-
   void updatePageCount(const std::string& table_name, PageCount page_count);
   void updateNextRowId(const std::string& table_name, RowId next_row_id);
 
   Table createTable(const std::string& table_name);
   std::optional<Table> getTable(const std::string& table_name);
   // void removeTable(std::string table_name);
+
+  template<typename Mapper>
+  void mapOverTables(Mapper&& mapper);
 };
+
+template<typename Mapper>
+void Database::mapOverTables(Mapper&& mapper)
+{
+  schema_.tables.mapOverRecords(std::forward<Mapper>(mapper));
+}
 
 } // namespace white::davisbase::sdl
