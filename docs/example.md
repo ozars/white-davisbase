@@ -1,6 +1,6 @@
 # Example Interface
 
-```
+```cpp
 {
   using namespace white::davisbase::sdl;
   auto table_opt = database.getTable("test");
