@@ -111,10 +111,66 @@ public:
   void updateRecord(const TableLeafCell& cell);
   std::optional<TableLeafPage> appendRecord(const TableLeafCell& cell);
 
+  template<typename Mapper>
+  void mapOverRecords(Mapper&& mapper);
+
   static TableLeafPage create(Table& table, PageNo page_no);
 
   friend std::ostream& operator<<(std::ostream& os, const TableLeafPage& page);
 };
+
+template<typename Mapper>
+void TableLeafPage::mapOverRecords(Mapper&& mapper)
+{
+  auto call_mapper = [&](CellIndex i, auto&& cell) {
+    if constexpr (std::is_invocable_v<Mapper, CellIndex, TableLeafPage&,
+                                      TableLeafCell>) {
+      if constexpr (std::is_same_v<void, std::invoke_result_t<Mapper, CellIndex,
+                                                              TableLeafPage&,
+                                                              TableLeafCell>>)
+        mapper(i, *this, std::forward<decltype(cell)>(cell));
+      else
+        return mapper(i, *this, std::forward<decltype(cell)>(cell));
+    } else if constexpr (std::is_invocable_v<Mapper, TableLeafPage&,
+                                             TableLeafCell>) {
+      if constexpr (std::is_same_v<void,
+                                   std::invoke_result_t<Mapper, TableLeafPage&,
+                                                        TableLeafCell>>)
+        mapper(*this, std::forward<decltype(cell)>(cell));
+      else
+        return mapper(*this, std::forward<decltype(cell)>(cell));
+    } else if constexpr (std::is_invocable_v<Mapper, CellIndex,
+                                             TableLeafCell>) {
+      if constexpr (std::is_same_v<void, std::invoke_result_t<Mapper, CellIndex,
+                                                              TableLeafCell>>)
+        mapper(i, std::forward<decltype(cell)>(cell));
+      else
+        return mapper(i, std::forward<decltype(cell)>(cell));
+    } else {
+      static_assert(std::is_invocable_v<Mapper, TableLeafCell>);
+      if constexpr (std::is_same_v<void,
+                                   std::invoke_result_t<Mapper, TableLeafCell>>)
+        mapper(std::forward<decltype(cell)>(cell));
+      else
+        return mapper(std::forward<decltype(cell)>(cell));
+    }
+  };
+
+  for (CellIndex i = 0; i < cellCount(); i++) {
+    using MappingReturnType =
+      std::invoke_result_t<decltype(call_mapper), CellIndex, TableLeafCell&&>;
+    if constexpr (std::is_same_v<MappingReturnType, void>) {
+      call_mapper(i, getCell(i));
+    } else if constexpr (std::is_same_v<MappingReturnType, bool>) {
+      if (!call_mapper(i, getCell(i)))
+        return;
+    } else if constexpr (std::is_same_v<MappingReturnType, CellIndex>) {
+      i = call_mapper(i, getCell(i));
+    } else {
+      throw std::logic_error("Inapplicable mapper function");
+    }
+  }
+}
 
 class Database;
 
@@ -152,10 +208,52 @@ public:
 
   TableLeafPage leftmostLeafPage();
 
+  template<typename Mapper>
+  void mapOverLeafPages(Mapper&& mapper);
+
+  template<typename Mapper>
+  void mapOverLeafPages(TableLeafPage&& initialPage, Mapper&& mapper);
+
+  template<typename Mapper>
+  void mapOverRecords(Mapper&& mapper);
+
+  template<typename Mapper>
+  void mapOverRecords(TableLeafPage&& initialPage, Mapper&& mapper);
+
   static Table create(Database& database, std::string name, std::fstream file,
                       RowId next_row_id, PageLength page_length);
 
   friend std::ostream& operator<<(std::ostream& os, const Table& table);
 };
+
+template<typename Mapper>
+void Table::mapOverLeafPages(Mapper&& mapper)
+{
+  mapOverLeafPages(leftmostLeafPage(), std::forward<Mapper>(mapper));
+}
+
+template<typename Mapper>
+void Table::mapOverLeafPages(TableLeafPage&& page, Mapper&& mapper)
+{
+  while (true) {
+    mapper(page);
+    if (!page.hasRightSiblingPage())
+      return;
+    page = page.rightSiblingPage();
+  }
+}
+
+template<typename Mapper>
+void Table::mapOverRecords(Mapper&& mapper)
+{
+  mapOverLeafPages([&](auto&& page) { page.mapOverRecords(mapper); });
+}
+
+template<typename Mapper>
+void Table::mapOverRecords(TableLeafPage&& initialPage, Mapper&& mapper)
+{
+  mapOverLeafPages(std::move(initialPage),
+                   [&](auto&& page) { page.mapOverRecords(mapper); });
+}
 
 } // namespace white::davisbase::sdl
