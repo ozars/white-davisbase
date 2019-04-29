@@ -269,7 +269,7 @@ void Database::updateNextRowId(const std::string& table_name, RowId next_row_id)
 Table Database::createTable(const std::string& table_name,
                             common::ColumnDefinitions&& column_definitions)
 {
-  static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
+  const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
   if (fs::exists(path))
     throw std::runtime_error("Table file already exists");
@@ -297,7 +297,7 @@ Table Database::createTable(const std::string& table_name,
 
 std::optional<Table> Database::getTable(const std::string& table_name)
 {
-  static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
+  const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
   bool found = false;
   schema_.tables.mapOverRecords([&](TableLeafCell cell) {
@@ -333,7 +333,7 @@ std::optional<Table> Database::getTable(const std::string& table_name)
 
 void Database::removeTable(std::string table_name)
 {
-  static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
+  const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
 
   if (!fs::exists(path))
     throw std::runtime_error("Couldn't find table file");
