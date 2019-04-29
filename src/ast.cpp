@@ -1,12 +1,13 @@
 #include "ast.hpp"
+#include "sdl/table.hpp"
 
 #include <iostream>
 
 #include "sdl/database.hpp"
 
 namespace white::davisbase::ast {
-
 using sdl::Database;
+using sdl::TableLeafCell;
 
 void Command::execute(Database& database)
 {
