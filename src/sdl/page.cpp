@@ -35,6 +35,17 @@ CellOffset Page::cellContentAreaOffset() const
   return deserialized(offset_cast<CellOffset>(rawData(), 0x03));
 }
 
+void Page::deleteRecord(CellIndex index)
+{
+  if (index >= cellCount())
+    throw std::logic_error("Requested cell index is out of range for the page");
+
+  auto cell_address = reinterpret_cast<CellOffset*>(rawData() + 0x09) + index;
+  std::copy(cell_address + 1, cell_address + cellCount() - index, cell_address);
+  setCellCount(cellCount() - 1);
+  commit();
+}
+
 void Page::setCellOffset(CellIndex index, CellOffset offset)
 {
   if (index >= cellCount())

@@ -108,6 +108,7 @@ public:
 
   TableLeafCell getCell(CellIndex index) const;
   void appendCell(const TableLeafCell& cell);
+  using Page::deleteRecord;
 
   void updateRecord(const TableLeafCell& cell);
   std::optional<TableLeafPage> appendRecord(const TableLeafCell& cell);

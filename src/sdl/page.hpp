@@ -20,6 +20,7 @@ protected:
 
   CellOffset cellOffset(CellIndex index) const;
   CellOffset cellContentAreaOffset() const;
+  void deleteRecord(CellIndex index);
 
   void setCellOffset(CellIndex index, CellOffset offset);
   void setCellContentAreaOffset(CellOffset offset);
