@@ -331,6 +331,33 @@ std::optional<Table> Database::getTable(const std::string& table_name)
                page_count, page_length, getColumnsInfo(table_name));
 }
 
-// void Database::removeTable(string table_name) {}
+void Database::removeTable(std::string table_name)
+{
+  static const auto path = directory_path_ / (table_name + TABLE_FILE_EXT);
+
+  if (!fs::exists(path))
+    throw std::runtime_error("Couldn't find table file");
+  if (!fs::is_regular_file(path))
+    throw std::runtime_error("Table file is not a regular file");
+
+  schema_.tables.mapOverRecords(
+    [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
+      if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+        page.deleteRecord(i);
+        return CellIndex(-1);
+      }
+      return CellIndex(i + 1);
+    });
+  schema_.columns.mapOverRecords(
+    [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
+      if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
+        page.deleteRecord(i);
+        return CellIndex(i - 1);
+      }
+      return i;
+    });
+
+  fs::remove(path);
+}
 
 } // namespace white::davisbase::sdl
