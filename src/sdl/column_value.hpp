@@ -1,5 +1,8 @@
 #pragma once
 
+#include <variant>
+
+#include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include "../common.hpp"
@@ -38,27 +41,50 @@ public:
 
   const underlying_type& get() const;
   explicit operator underlying_type() const;
+
+  bool operator==(const ColumnValue& rhs) const { return get() == rhs.get(); }
+  bool operator<(const ColumnValue& rhs) const { return get() < rhs.get(); }
+  bool operator>(const ColumnValue& rhs) const { return get() > rhs.get(); }
+  bool operator<=(const ColumnValue& rhs) const { return get() <= rhs.get(); }
+  bool operator>=(const ColumnValue& rhs) const { return get() >= rhs.get(); }
+  bool operator!=(const ColumnValue& rhs) const { return get() != rhs.get(); }
 };
 
 template<common::ColumnType T>
 std::ostream& operator<<(std::ostream& os, const ColumnValue<T>& val);
 
+template<typename U, typename T>
+U smart_cast(T&& t)
+{
+  using BareU = std::remove_reference_t<std::remove_cv_t<U>>;
+  using BareT = std::remove_reference_t<std::remove_cv_t<T>>;
+  constexpr auto u_is_arithmetic =
+    std::is_arithmetic_v<BareU> || std::is_enum_v<BareU>;
+  constexpr auto t_is_arithmetic =
+    std::is_arithmetic_v<BareT> || std::is_enum_v<BareT>;
+  constexpr auto u_is_string = std::is_same_v<BareU, std::string>;
+  constexpr auto t_is_string = std::is_same_v<BareT, std::string>;
+
+  if constexpr (u_is_arithmetic && t_is_arithmetic)
+    return boost::numeric_cast<U>(std::forward<T>(t));
+  else if constexpr ((u_is_arithmetic && t_is_string) ||
+                     (t_is_arithmetic && u_is_string))
+    return boost::lexical_cast<U>(std::forward<T>(t));
+  else
+    return std::forward<T>(t);
+}
+
 template<common::ColumnType T>
 template<typename CastedType>
 ColumnValue<T>::ColumnValue(CastedType&& value)
-  : value_(std::is_arithmetic_v<CastedType>
-             ? boost::numeric_cast<underlying_type>(value)
-             : underlying_type(std::forward<CastedType>(value)))
+  : value_(smart_cast<underlying_type>(std::forward<CastedType>(value)))
 {}
 
 template<common::ColumnType T>
 template<typename CastedType>
 ColumnValue<T>& ColumnValue<T>::operator=(CastedType&& value)
 {
-  if constexpr (std::is_arithmetic_v<CastedType>)
-    value_ = boost::numeric_cast<underlying_type>(value);
-  else
-    value_ = underlying_type(std::forward<CastedType>(value));
+  value_ = smart_cast<underlying_type>(std::forward<CastedType>(value));
 }
 
 #ifndef COLUMN_VALUE_EXPLICIT_IMPLEMENTATION
@@ -92,6 +118,14 @@ using ColumnValueVariant = std::variant<
 // clang-format on
 
 std::ostream& operator<<(std::ostream& os, const ColumnValueVariant& variant);
+
+using RowData = std::vector<ColumnValueVariant>;
+
+ColumnValueVariant createColumnValue(common::ColumnType column_type,
+                                     const common::LiteralValue& literal_value);
+
+RowData createRowData(const common::ColumnDefinitions& column_definitions,
+                      const std::vector<common::LiteralValue>& literal_values);
 
 using TinyIntColumnValue = ColumnValue<common::ColumnType::TINYINT>;
 using SmallIntColumnValue = ColumnValue<common::ColumnType::SMALLINT>;

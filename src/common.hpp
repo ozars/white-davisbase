@@ -3,6 +3,7 @@
 #include <array>
 #include <optional>
 #include <string>
+#include <variant>
 
 #include <boost/fusion/include/adapt_struct.hpp>
 
@@ -171,6 +172,33 @@ struct NullValue
 struct LiteralValue
 {
   std::variant<NullValue, std::string, long double, long long> value;
+
+  LiteralValue() = default;
+  LiteralValue(const LiteralValue&) = default;
+  LiteralValue(LiteralValue&&) = default;
+  LiteralValue& operator=(const LiteralValue&) = default;
+  LiteralValue& operator=(LiteralValue&&) = default;
+
+  template<typename T, std::enable_if_t<std::is_arithmetic_v<T> ||
+                                        std::is_enum_v<T>>* = nullptr>
+  LiteralValue(T t)
+    : value(std::is_floating_point_v<T>
+              ? decltype(value){static_cast<long double>(t)}
+              : decltype(value){static_cast<long long>(t)})
+  {}
+
+  LiteralValue(const NullValue& val)
+    : value({val})
+  {}
+  LiteralValue(const std::string& val)
+    : value({val})
+  {}
+  LiteralValue(std::string&& val)
+    : value({std::move(val)})
+  {}
+  LiteralValue(const char* val)
+    : value({val})
+  {}
 };
 
 inline std::ostream& operator<<(std::ostream& os, const LiteralValue& literal)
@@ -245,6 +273,15 @@ inline std::ostream& operator<<(std::ostream& os,
   util::OutputManipulator om(os);
   return os << "Column(name=\"" << column.name << "\", type=" << column.type
             << ", modifiers=" << column.modifiers << ")";
+}
+
+using ColumnDefinitions = std::vector<ColumnDefinition>;
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const ColumnDefinitions& column_definitions)
+{
+  util::OutputManipulator om(os);
+  return os << "[" << util::join(column_definitions, ", ") << "]";
 }
 
 } // namespace white::davisbase::common
