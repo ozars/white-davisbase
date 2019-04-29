@@ -125,7 +125,7 @@ public:
 template<typename Mapper>
 void TableLeafPage::mapOverRecords(Mapper&& mapper)
 {
-  auto call_mapper = [&](CellIndex i, auto&& cell) {
+  auto call_mapper = [&]([[maybe_unused]] CellIndex i, auto&& cell) {
     if constexpr (std::is_invocable_v<Mapper, CellIndex, TableLeafPage&,
                                       TableLeafCell>) {
       if constexpr (std::is_same_v<void, std::invoke_result_t<Mapper, CellIndex,

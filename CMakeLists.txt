@@ -24,7 +24,8 @@ set(CATCH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/vendor/Catch2")
 set(DAVISBASE_SOURCE_FILES main.cpp parser.hpp parser.cpp ast.hpp ast.cpp
     util.hpp sdl/database.cpp sdl/page.cpp sdl/table.cpp sdl/table_leaf_page.cpp
     sdl/table_interior_page.cpp sdl/column_value.cpp)
-set(TESTS_SOURCE_FILES main.test.cpp parser.test.cpp utility.test.hpp)
+set(TESTS_SOURCE_FILES main.test.cpp parser.test.cpp sdl.test.cpp
+    utility.test.hpp)
 
 # Boost is necessary for parser
 find_package(Boost REQUIRED)
@@ -83,7 +84,7 @@ if (TESTING_ENABLED)
 
     target_include_directories(tests PRIVATE ${Boost_INCLUDE_DIRS})
     target_include_directories(tests PRIVATE "${DAVISBASE_SOURCE_DIR}")
-    target_link_libraries(tests PUBLIC Catch2::Catch2 coverage_config)
+    target_link_libraries(tests PUBLIC stdc++fs Catch2::Catch2 coverage_config)
 
     include(CTest)
     include(Catch)
