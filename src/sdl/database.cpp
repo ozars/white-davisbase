@@ -344,9 +344,9 @@ void Database::removeTable(std::string table_name)
     [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
       if (std::get<TextColumnValue>(cell.row_data[0]).get() == table_name) {
         page.deleteRecord(i);
-        return CellIndex(-1);
+        return page.cellCount();
       }
-      return CellIndex(i + 1);
+      return i;
     });
   schema_.columns.mapOverRecords(
     [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {

@@ -158,7 +158,9 @@ bool TableLeafPage::mapOverRecords(Mapper&& mapper)
     }
   };
 
-  for (CellIndex i = 0; i < cellCount(); i++) {
+  CellIndex i;
+
+  for (i = 0; i < cellCount(); i++) {
     using MappingReturnType =
       std::invoke_result_t<decltype(call_mapper), CellIndex, TableLeafCell&&>;
     if constexpr (std::is_same_v<MappingReturnType, void>) {
@@ -168,12 +170,12 @@ bool TableLeafPage::mapOverRecords(Mapper&& mapper)
         return false;
     } else if constexpr (std::is_same_v<MappingReturnType, CellIndex>) {
       i = call_mapper(i, getCell(i));
-      if (i == CellIndex(-1))
-        return false;
     } else {
       throw std::logic_error("Inapplicable mapper function");
     }
   }
+  if (i > cellCount())
+    return false;
   return true;
 }
 
