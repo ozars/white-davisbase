@@ -9,8 +9,6 @@
 
 namespace white::davisbase::sdl {
 
-using RowData = std::vector<ColumnValueVariant>;
-
 std::ostream& operator<<(std::ostream& os, const RowData& row_data);
 
 struct TableInteriorCell
@@ -187,16 +185,22 @@ private:
   RowId next_row_id_;
   PageCount page_count_;
   PageLength page_length_;
+  common::ColumnDefinitions column_definitions_;
+
+  void appendRecord(const TableLeafCell& cell);
+  TableLeafPage leftmostLeafPage();
+  TableLeafPage leafPageByRowId(RowId row_id);
 
 public:
   Table(Database& database, std::string name, std::fstream file,
         PageNo root_page_no, RowId next_row_id, PageCount page_count,
-        PageLength page_length);
+        PageLength page_length, common::ColumnDefinitions&& column_definitions);
 
   PageNo rootPageNo() const;
   RowId nextRowId() const;
   PageLength pageLength() const;
   PageCount pageCount() const;
+  const common::ColumnDefinitions& columnDefinitions() const;
 
   void setRootPageNo(PageNo page_no);
   void setNextRowId(RowId next_row_id);
@@ -204,13 +208,10 @@ public:
 
   std::variant<TableInteriorPage, TableLeafPage> getPage(PageNo page_no);
 
+  void appendRecord(const std::vector<common::LiteralValue>& values);
   void appendRecord(const RowData& rows);
   void appendRecord(RowData&& rows);
-  void appendRecord(const TableLeafCell& cell);
   void commitPage(const Page& page);
-
-  TableLeafPage leftmostLeafPage();
-  TableLeafPage leafPageByRowId(RowId row_id);
 
   template<typename Mapper>
   void mapOverLeafPages(Mapper&& mapper);
@@ -225,7 +226,8 @@ public:
   void mapOverRecords(TableLeafPage&& initialPage, Mapper&& mapper);
 
   static Table create(Database& database, std::string name, std::fstream file,
-                      RowId next_row_id, PageLength page_length);
+                      RowId next_row_id, PageLength page_length,
+                      common::ColumnDefinitions&& column_definitions);
 
   friend std::ostream& operator<<(std::ostream& os, const Table& table);
 };

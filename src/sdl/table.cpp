@@ -4,6 +4,8 @@
 
 namespace white::davisbase::sdl {
 
+using common::ColumnDefinitions;
+
 std::ostream& operator<<(std::ostream& os, const RowData& row_data)
 {
   using util::join;
@@ -12,7 +14,7 @@ std::ostream& operator<<(std::ostream& os, const RowData& row_data)
 
 Table::Table(Database& database, std::string name, std::fstream file,
              PageNo root_page_no, RowId next_row_id, PageCount page_count,
-             PageLength page_length)
+             PageLength page_length, ColumnDefinitions&& column_definitions)
   : database_(&database)
   , name_(std::move(name))
   , file_(std::move(file))
@@ -20,6 +22,7 @@ Table::Table(Database& database, std::string name, std::fstream file,
   , next_row_id_(next_row_id)
   , page_count_(page_count)
   , page_length_(page_length)
+  , column_definitions_(std::move(column_definitions))
 {}
 
 PageNo Table::rootPageNo() const
@@ -40,6 +43,11 @@ PageLength Table::pageLength() const
 PageCount Table::pageCount() const
 {
   return page_count_;
+}
+
+const common::ColumnDefinitions& Table::columnDefinitions() const
+{
+  return column_definitions_;
 }
 
 void Table::setRootPageNo(PageNo page_no)
@@ -125,6 +133,11 @@ void Table::appendRecord(RowData&& rows)
   setNextRowId(nextRowId() + 1);
 }
 
+void Table::appendRecord(const std::vector<common::LiteralValue>& values)
+{
+  appendRecord(createRowData(columnDefinitions(), values));
+}
+
 void Table::commitPage(const Page& page)
 {
   file_.seekp(page.pageNo() * page_length_);
@@ -151,10 +164,11 @@ TableLeafPage Table::leafPageByRowId(RowId row_id)
 }
 
 Table Table::create(Database& database, std::string name, std::fstream file,
-                    RowId next_row_id, PageLength page_length)
+                    RowId next_row_id, PageLength page_length,
+                    ColumnDefinitions&& column_definitions)
 {
-  auto table =
-    Table(database, name, std::move(file), 0, next_row_id, 1, page_length);
+  auto table = Table(database, name, std::move(file), 0, next_row_id, 1,
+                     page_length, std::move(column_definitions));
   TableLeafPage::create(table, 0).commit();
   return table;
 }
@@ -165,7 +179,8 @@ std::ostream& operator<<(std::ostream& os, const Table& table)
             << ", root_page_no=" << table.rootPageNo()
             << ", next_row_id=" << table.nextRowId()
             << ", page_count=" << table.pageCount()
-            << ", page_length=" << table.pageLength() << ")";
+            << ", page_length=" << table.pageLength()
+            << ", column_definitions=" << table.columnDefinitions() << ")";
 }
 
 } // namespace white::davisbase::sdl

@@ -4,6 +4,7 @@
 namespace white::davisbase::sdl {
 
 using common::ColumnType;
+using common::LiteralValue;
 
 template<ColumnType T>
 ColumnValue<T>::ColumnValue(const underlying_type& value) noexcept
@@ -74,6 +75,81 @@ std::ostream& operator<<(std::ostream& os, const ColumnValueVariant& variant)
 }
 
 /* TODO: Specialize operator<< for TIME, DATETIME and DATE. */
+
+ColumnValueVariant createColumnValue(ColumnType column_type,
+                                     const LiteralValue& literal_value)
+{
+  using common::NullValue;
+
+  auto get_column_value_variant = [&](auto& val) -> ColumnValueVariant {
+    using T = std::decay_t<decltype(val)>;
+    if constexpr (std::is_same_v<T, NullValue>)
+      return NullValue();
+    else {
+      switch (column_type) {
+        case ColumnType::TINYINT: {
+          using ColumnValue = TinyIntColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::SMALLINT: {
+          using ColumnValue = SmallIntColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::INT: {
+          using ColumnValue = IntColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::BIGINT: {
+          using ColumnValue = BigIntColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::FLOAT: {
+          using ColumnValue = FloatColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::YEAR: {
+          using ColumnValue = YearColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::TIME: {
+          using ColumnValue = TimeColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::DATETIME: {
+          using ColumnValue = DateTimeColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::DATE: {
+          using ColumnValue = DateColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        case ColumnType::TEXT: {
+          using ColumnValue = TextColumnValue;
+          return ColumnValue(std::move(val));
+        }
+        default:
+          throw std::runtime_error("Unknown column type");
+      }
+    };
+  };
+
+  return std::visit(get_column_value_variant, literal_value.value);
+}
+
+RowData createRowData(const common::ColumnDefinitions& column_definitions,
+                      const std::vector<common::LiteralValue>& literal_values)
+{
+  if (column_definitions.size() != literal_values.size())
+    throw std::runtime_error(
+      "Column definitions should be same size with literal values");
+
+  RowData row_data;
+  row_data.reserve(column_definitions.size());
+  for (size_t i = 0; i < column_definitions.size(); i++)
+    row_data.push_back(
+      createColumnValue(column_definitions[i].type, literal_values[i]));
+  return row_data;
+}
 
 template class ColumnValue<common::ColumnType::TINYINT>;
 template class ColumnValue<common::ColumnType::SMALLINT>;

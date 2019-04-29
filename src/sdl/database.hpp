@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 
+#include "../common.hpp"
 #include "common.hpp"
 #include "table.hpp"
 
@@ -41,6 +42,11 @@ private:
                     PageCount& page_count, RowId& next_row_id,
                     PageLength& page_length, Table& tables_schema);
 
+  common::ColumnDefinitions getColumnsInfo(const std::string& table_name);
+
+  common::ColumnDefinitions getColumnsInfo(const std::string& table_name,
+                                           Table& columns_schema);
+
 public:
   Database(
     std::filesystem::path directory_path = std::filesystem::current_path(),
@@ -49,7 +55,8 @@ public:
   void updatePageCount(const std::string& table_name, PageCount page_count);
   void updateNextRowId(const std::string& table_name, RowId next_row_id);
 
-  Table createTable(const std::string& table_name);
+  Table createTable(const std::string& table_name,
+                    common::ColumnDefinitions&& column_definitions);
   std::optional<Table> getTable(const std::string& table_name);
   // void removeTable(std::string table_name);
 
