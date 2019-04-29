@@ -8,7 +8,7 @@ int main()
   std::string cmd;
   white::davisbase::parser::Parser parser;
   white::davisbase::sdl::Database database;
-  while (getline(std::cin, cmd)) {
+  while ((std::cout << "davisbase> "), getline(std::cin, cmd)) {
     try {
       parser.parse(cmd).execute(database);
     } catch (const std::runtime_error& err) {
