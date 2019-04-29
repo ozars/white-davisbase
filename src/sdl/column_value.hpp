@@ -58,12 +58,14 @@ U smart_cast(T&& t)
 {
   using BareU = std::remove_reference_t<std::remove_cv_t<U>>;
   using BareT = std::remove_reference_t<std::remove_cv_t<T>>;
-  constexpr auto u_is_arithmetic =
+  [[maybe_unused]] constexpr auto u_is_arithmetic =
     std::is_arithmetic_v<BareU> || std::is_enum_v<BareU>;
-  constexpr auto t_is_arithmetic =
+  [[maybe_unused]] constexpr auto t_is_arithmetic =
     std::is_arithmetic_v<BareT> || std::is_enum_v<BareT>;
-  constexpr auto u_is_string = std::is_same_v<BareU, std::string>;
-  constexpr auto t_is_string = std::is_same_v<BareT, std::string>;
+  [[maybe_unused]] constexpr auto u_is_string =
+    std::is_same_v<BareU, std::string>;
+  [[maybe_unused]] constexpr auto t_is_string =
+    std::is_same_v<BareT, std::string>;
 
   if constexpr (u_is_arithmetic && t_is_arithmetic)
     return boost::numeric_cast<U>(std::forward<T>(t));
@@ -85,6 +87,7 @@ template<typename CastedType>
 ColumnValue<T>& ColumnValue<T>::operator=(CastedType&& value)
 {
   value_ = smart_cast<underlying_type>(std::forward<CastedType>(value));
+  return *this;
 }
 
 #ifndef COLUMN_VALUE_EXPLICIT_IMPLEMENTATION
