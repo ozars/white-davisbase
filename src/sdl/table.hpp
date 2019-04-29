@@ -113,7 +113,7 @@ public:
   std::optional<TableLeafPage> appendRecord(const TableLeafCell& cell);
 
   template<typename Mapper>
-  void mapOverRecords(Mapper&& mapper);
+  bool mapOverRecords(Mapper&& mapper);
 
   static TableLeafPage create(Table& table, PageNo page_no);
 
@@ -121,7 +121,7 @@ public:
 };
 
 template<typename Mapper>
-void TableLeafPage::mapOverRecords(Mapper&& mapper)
+bool TableLeafPage::mapOverRecords(Mapper&& mapper)
 {
   auto call_mapper = [&](CellIndex i, auto&& cell) {
     if constexpr (std::is_invocable_v<Mapper, CellIndex, TableLeafPage&,
@@ -164,13 +164,16 @@ void TableLeafPage::mapOverRecords(Mapper&& mapper)
       call_mapper(i, getCell(i));
     } else if constexpr (std::is_same_v<MappingReturnType, bool>) {
       if (!call_mapper(i, getCell(i)))
-        return;
+        return false;
     } else if constexpr (std::is_same_v<MappingReturnType, CellIndex>) {
       i = call_mapper(i, getCell(i));
+      if (i == CellIndex(-1))
+        return false;
     } else {
       throw std::logic_error("Inapplicable mapper function");
     }
   }
+  return true;
 }
 
 class Database;
@@ -242,8 +245,7 @@ template<typename Mapper>
 void Table::mapOverLeafPages(TableLeafPage&& page, Mapper&& mapper)
 {
   while (true) {
-    mapper(page);
-    if (!page.hasRightSiblingPage())
+    if (!mapper(page) || !page.hasRightSiblingPage())
       return;
     page = page.rightSiblingPage();
   }
@@ -252,14 +254,14 @@ void Table::mapOverLeafPages(TableLeafPage&& page, Mapper&& mapper)
 template<typename Mapper>
 void Table::mapOverRecords(Mapper&& mapper)
 {
-  mapOverLeafPages([&](auto&& page) { page.mapOverRecords(mapper); });
+  mapOverLeafPages([&](auto&& page) { return page.mapOverRecords(mapper); });
 }
 
 template<typename Mapper>
 void Table::mapOverRecords(TableLeafPage&& initialPage, Mapper&& mapper)
 {
   mapOverLeafPages(std::move(initialPage),
-                   [&](auto&& page) { page.mapOverRecords(mapper); });
+                   [&](auto&& page) { return page.mapOverRecords(mapper); });
 }
 
 } // namespace white::davisbase::sdl
