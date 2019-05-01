@@ -6,8 +6,54 @@
 #include "sdl/database.hpp"
 
 namespace white::davisbase::ast {
+
+using common::NullValue;
+using sdl::ColumnValueVariant;
 using sdl::Database;
 using sdl::TableLeafCell;
+
+static bool isWhereSatisfied(const ColumnValueVariant& variant,
+                             const WhereClause& condition)
+{
+  return std::visit(
+    [&](auto&& value) {
+      using T = std::decay_t<decltype(value)>;
+      using common::OperatorType;
+
+      if constexpr (std::is_same_v<T, NullValue>) {
+        switch (condition.op) {
+          case OperatorType::LESS_EQUAL:
+          case OperatorType::LESS:
+          case OperatorType::GREATER_EQUAL:
+          case OperatorType::GREATER:
+            throw std::runtime_error(
+              "Null value can only be compared for equality");
+          case OperatorType::EQUAL:
+            return std::holds_alternative<NullValue>(condition.literal.value);
+          default:
+            throw std::runtime_error("Unknown operator type");
+        }
+      } else {
+        auto condition_value = std::get<T>(
+          sdl::createColumnValue(T::column_type, condition.literal));
+        switch (condition.op) {
+          case OperatorType::LESS_EQUAL:
+            return value <= condition_value;
+          case OperatorType::LESS:
+            return value < condition_value;
+          case OperatorType::GREATER_EQUAL:
+            return value >= condition_value;
+          case OperatorType::GREATER:
+            return value > condition_value;
+          case OperatorType::EQUAL:
+            return value == condition_value;
+          default:
+            throw std::runtime_error("Unknown operator type");
+        }
+      }
+    },
+    variant);
+}
 
 void Command::execute(Database& database)
 {
