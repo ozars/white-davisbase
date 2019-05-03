@@ -22,12 +22,11 @@ static bool isWhereSatisfied(const ColumnValueVariant& variant,
 
       if constexpr (std::is_same_v<T, NullValue>) {
         switch (condition.op) {
-          case OperatorType::LESS_EQUAL:
           case OperatorType::LESS:
-          case OperatorType::GREATER_EQUAL:
           case OperatorType::GREATER:
-            throw std::runtime_error(
-              "Null value can only be compared for equality");
+            return false;
+          case OperatorType::LESS_EQUAL:
+          case OperatorType::GREATER_EQUAL:
           case OperatorType::EQUAL:
             return std::holds_alternative<NullValue>(condition.literal.value);
           default:
