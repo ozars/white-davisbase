@@ -731,18 +731,13 @@ TEST_CASE("Parse updating a table", "[parser][update]")
 
   SECTION("Simple cases")
   {
-    REQUIRE_NOTHROW(
-      parser.parse("update test set test_column=\"abc\" where a = 'omer';"));
-    REQUIRE_NOTHROW(
-      parser.parse("update test set test_column=292 where a = 5;"));
-    REQUIRE_NOTHROW(
-      parser.parse("update test set test_column=3.14 where a <= 5;"));
-    REQUIRE_NOTHROW(
-      parser.parse("update test set test_column='nk12' where a >= 5;"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=\"abc\";"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=292;"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column=3.14;"));
+    REQUIRE_NOTHROW(parser.parse("update test set test_column='nk12';"));
     REQUIRE_NOTHROW(
       parser.parse("update test set test_column=1 where test_row=1;"));
 
-    REQUIRE_THROWS(parser.parse("update test set test_column=3.14;"));
     REQUIRE_THROWS(parser.parse("update test set test_column='\'3.14';"));
     REQUIRE_THROWS(parser.parse("update test set column=2,3;"));
     REQUIRE_THROWS(parser.parse("update test sets column=2;"));
@@ -753,26 +748,44 @@ TEST_CASE("Parse updating a table", "[parser][update]")
     REQUIRE_THROWS(parser.parse(
       "update test set column=1 where row1='abc' and row2='mnp';"));
   }
-  SECTION("Parsed content with where clause")
+  SECTION("Parsed content")
   {
     UpdateCommand actual_cmd;
 
-    REQUIRE_NOTHROW(parsed_cmd = parser.parse(
-                      "update test_table set test_column='test_value' where "
-                      "test_col='abc';"));
+    SECTION("Without where clause")
+    {
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "update test_table set test_column='test_value';"));
+      REQUIRE(holds_alternative<UpdateCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<UpdateCommand>(parsed_cmd.command));
+      CHECK(actual_cmd.table_name == "test_table");
+      CHECK(actual_cmd.column_name == "test_column");
+      REQUIRE(holds_alternative<string>(actual_cmd.value.value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.value.value) == "test_value");
+    }
 
-    REQUIRE(holds_alternative<UpdateCommand>(parsed_cmd.command));
-    REQUIRE_NOTHROW(actual_cmd = get<UpdateCommand>(parsed_cmd.command));
+    SECTION("With where clause")
+    {
+      WhereClause where;
+      REQUIRE_NOTHROW(parsed_cmd = parser.parse(
+                        "update test_table set test_column='test_value' where "
+                        "test_col='abc';"));
 
-    CHECK(actual_cmd.table_name == "test_table");
-    CHECK(actual_cmd.column_name == "test_column");
-    REQUIRE(holds_alternative<string>(actual_cmd.value.value));
-    REQUIRE_NOTHROW(get<string>(actual_cmd.value.value) == "test_value");
+      REQUIRE(holds_alternative<UpdateCommand>(parsed_cmd.command));
+      REQUIRE_NOTHROW(actual_cmd = get<UpdateCommand>(parsed_cmd.command));
 
-    CHECK(actual_cmd.condition.column_name == "test_col");
-    CHECK(actual_cmd.condition.op == OperatorType::EQUAL);
-    REQUIRE(holds_alternative<string>(actual_cmd.condition.literal.value));
-    REQUIRE_NOTHROW(get<string>(actual_cmd.condition.literal.value) == "abc");
+      CHECK(actual_cmd.table_name == "test_table");
+      CHECK(actual_cmd.column_name == "test_column");
+      REQUIRE(holds_alternative<string>(actual_cmd.value.value));
+      REQUIRE_NOTHROW(get<string>(actual_cmd.value.value) == "test_value");
+      REQUIRE(actual_cmd.condition.has_value());
+      where = actual_cmd.condition.value();
+
+      CHECK(where.column_name == "test_col");
+      CHECK(where.op == OperatorType::EQUAL);
+      REQUIRE(holds_alternative<string>(where.literal.value));
+      REQUIRE_NOTHROW(get<string>(where.literal.value) == "abc");
+    }
   }
 }
 
