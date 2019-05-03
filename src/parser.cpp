@@ -129,7 +129,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
                   literal % ',' >> ')';
     delete_from = Q("DELETE", "FROM") >> table_name >> -where;
     update = Q("UPDATE") >> table_name >> Q("SET") >> column_name >> '=' >>
-             literal >> -where;
+             literal >> where;
 
     /* VDL */
 

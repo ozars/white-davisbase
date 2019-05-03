@@ -133,17 +133,15 @@ struct UpdateCommand
   std::string table_name;
   std::string column_name;
   common::LiteralValue value;
-  std::optional<WhereClause> condition;
+  WhereClause condition;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const UpdateCommand& cmd)
 {
   util::OutputManipulator om(os);
-  os << "UpdateTableCommand(table_name=\"" << cmd.table_name
-     << "\", column_name=" << cmd.column_name << ", value=" << cmd.value;
-  if (cmd.condition.has_value())
-    os << ", condition=" << cmd.condition.value();
-  return os << ")";
+  return os << "UpdateTableCommand(table_name=\"" << cmd.table_name
+            << "\", column_name=" << cmd.column_name << ", value=" << cmd.value
+            << ", condition=" << cmd.condition << ")";
 }
 
 struct CreateIndexCommand
