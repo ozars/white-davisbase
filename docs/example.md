@@ -23,13 +23,13 @@
     });
 
   /* Variation 2 */
-  table.mapOverRecords([&](TableLeafPage& page, TableLeafCell record) {
+  table.mapOverRecords([&](Page& page, TableLeafCell record) {
     std::cerr << record << std::endl;
     std::cerr << page << std::endl;
   });
 
   /* Variation 3 */
-  table.mapOverRecords([&](CellIndex i, TableLeafPage& page, TableLeafCell record) {
+  table.mapOverRecords([&](CellIndex i, Page& page, TableLeafCell record) {
     std::cerr << record << std::endl;
     std::cerr << page << std::endl;
   });
