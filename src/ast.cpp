@@ -87,7 +87,39 @@ void SelectCommand::execute(Database& database)
 
 void DeleteFromCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  using namespace white::davisbase::sdl;
+  auto table_opt = database.getTable(table_name);
+  if (!table_opt.has_value()) {
+    throw std::runtime_error("Table doesn't exist");
+  }
+
+  if (condition == std::nullopt) {
+    throw std::runtime_error("Where clause required");
+  }
+
+  auto& table = table_opt.value();
+  auto column_defs = table.columnDefinitions();
+  std::map<std::string, common::ColumnDefinition> columns_map;
+
+  for (int i = 0; i < column_defs.size(); i++) {
+    columns_map[column_defs[i].name] = column_defs[i];
+  }
+
+  if (columns_map.find(condition->column_name) != columns_map.end()) {
+    throw std::runtime_error("Column doesn't exist");
+  }
+
+  auto colValVariant = createColumnValue(
+    columns_map[condition->column_name].type, condition->literal);
+
+  table.mapOverRecords(
+    [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
+      if (isWhereSatisfied(colValVariant, condition.value())) {
+        page.deleteRecord(i);
+        return CellIndex(i - 1);
+      }
+      return i;
+    });
 }
 
 void UpdateCommand::execute(Database& database)
