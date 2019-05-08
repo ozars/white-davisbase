@@ -78,7 +78,7 @@ void DropTableCommand::execute(Database& database)
 
 void CreateTableCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  database.createTable(table_name, std::move(columns));
 }
 
 void InsertIntoCommand::execute(Database& database)
