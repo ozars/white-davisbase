@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <map>
+
 #include "sdl/database.hpp"
 
 namespace white::davisbase::ast {
@@ -98,23 +100,26 @@ void DeleteFromCommand::execute(Database& database)
   }
 
   auto& table = table_opt.value();
-  auto column_defs = table.columnDefinitions();
+  auto& column_defs = table.columnDefinitions();
   std::map<std::string, common::ColumnDefinition> columns_map;
+  std::map<std::string, int> columns_idx_map;
 
   for (int i = 0; i < column_defs.size(); i++) {
     columns_map[column_defs[i].name] = column_defs[i];
+    columns_idx_map[column_defs[i].name] = i;
   }
-
-  if (columns_map.find(condition->column_name) != columns_map.end()) {
+  
+  if (columns_map.find(condition->column_name) == columns_map.end()) {
     throw std::runtime_error("Column doesn't exist");
   }
-
-  auto colValVariant = createColumnValue(
-    columns_map[condition->column_name].type, condition->literal);
-
+  
+  int idx = columns_idx_map[condition->column_name];
+  
+  WhereClause where_condition = condition.value();
+  
   table.mapOverRecords(
     [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
-      if (isWhereSatisfied(colValVariant, condition.value())) {
+      if (isWhereSatisfied(cell.row_data[idx], where_condition)) {
         page.deleteRecord(i);
         return CellIndex(i - 1);
       }
