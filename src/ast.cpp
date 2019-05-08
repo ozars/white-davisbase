@@ -108,15 +108,15 @@ void DeleteFromCommand::execute(Database& database)
     columns_map[column_defs[i].name] = column_defs[i];
     columns_idx_map[column_defs[i].name] = i;
   }
-  
+
   if (columns_map.find(condition->column_name) == columns_map.end()) {
     throw std::runtime_error("Column doesn't exist");
   }
-  
+
   int idx = columns_idx_map[condition->column_name];
-  
+
   WhereClause where_condition = condition.value();
-  
+
   table.mapOverRecords(
     [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
       if (isWhereSatisfied(cell.row_data[idx], where_condition)) {
