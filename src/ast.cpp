@@ -111,11 +111,7 @@ void UpdateCommand::execute(Database& database)
     for(size_t i=0; i<col_def.size(); i++)
     {
       if(cond.column_name == col_def[i].name)
-        {
           column_where_index_opt = i;
-          if (col_def[i].modifiers.unique || col_def[i].modifiers.primary_key)
-            is_col_unique = true;
-        }
     }
 
     if(!column_where_index_opt.has_value())
@@ -124,8 +120,11 @@ void UpdateCommand::execute(Database& database)
   
   for(size_t i=0; i<col_def.size(); i++)
   {
-    if(column_name == col_def[i].name)
+    if(column_name == col_def[i].name){
+      if (col_def[i].modifiers.unique || col_def[i].modifiers.primary_key)
+        is_col_unique = true;
       column_index_opt = i;
+    }
   }
 
   if(!column_index_opt.has_value())
