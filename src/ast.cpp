@@ -1,16 +1,21 @@
 #include "ast.hpp"
-#include "sdl/table.hpp"
 
 #include <iostream>
 
 #include "sdl/database.hpp"
+#include "sdl/table.hpp"
 
 namespace white::davisbase::ast {
 
 using common::NullValue;
+using sdl::CellIndex;
 using sdl::ColumnValueVariant;
 using sdl::Database;
 using sdl::TableLeafCell;
+using sdl::TableLeafPage;
+
+using sdl::createColumnValue;
+using sdl::createRowData;
 
 static bool isWhereSatisfied(const ColumnValueVariant& variant,
                              const WhereClause& condition)
@@ -87,7 +92,32 @@ void SelectCommand::execute(Database& database)
 
 void DeleteFromCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  auto table = database.getTable(table_name);
+
+  if (!table.has_value())
+    throw std::runtime_error("Table doesn't exist");
+
+  if (condition == std::nullopt)
+    throw std::runtime_error("Where clause required");
+
+  auto& column_defs = table->columnDefinitions();
+  std::optional<size_t> idx;
+
+  for (size_t i = 0; i < column_defs.size(); i++)
+    if (column_defs[i].name == condition->column_name)
+      idx = i;
+
+  if (!idx.has_value())
+    throw std::runtime_error("Column doesn't exist");
+
+  table->mapOverRecords(
+    [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
+      if (isWhereSatisfied(cell.row_data[*idx], *condition)) {
+        page.deleteRecord(i);
+        return CellIndex(i - 1);
+      }
+      return i;
+    });
 }
 
 void UpdateCommand::execute(Database& database)
