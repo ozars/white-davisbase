@@ -1,6 +1,7 @@
 #include "ast.hpp"
 
 #include <iostream>
+#include <vector>
 
 #include "sdl/database.hpp"
 #include "sdl/table.hpp"
@@ -145,18 +146,86 @@ void InsertIntoCommand::execute(Database& database)
 
 void SelectCommand::execute(Database& database)
 {
-  // using namespace white::davisbase::sdl;
-  //   using common::NullValue;
-  //   using std::holds_alternative;
+  auto table = database.getTable(table_name);
 
-  //   auto table_opt = database.getTable(table_name);
-  //    if (!table_opt.has_value()) {
-  //     throw std::runtime_error("Table doesn't exist");
-  //   }
+  if (!table.has_value())
+    throw std::runtime_error("Table not found");
 
-  //   auto& table = table_opt.value();
-  //   auto column_defs = table.columnDefinitions();
-  // std::cout << *this << std::endl;
+  auto& column_defs = table->columnDefinitions();
+
+  std::optional<size_t> where_column_idx;
+
+  if (condition.has_value()) {
+    for (size_t i = 0; i < column_defs.size(); i++) {
+      if (condition->column_name == column_defs[i].name) {
+        where_column_idx = i;
+        break;
+      }
+    }
+    if (!where_column_idx.has_value())
+      throw std::runtime_error("Column name is not known in where clause");
+
+    /* This is just to throw if value cannot be constructed from literal. */
+    createColumnValue(column_defs[*where_column_idx].type, condition->literal);
+  }
+
+  if (column_names.size() == 0) {
+
+    std::cout << "rowid|"
+              << util::join(table->columnDefinitions(), "|",
+                            [](auto& col_def) { return col_def.name; })
+              << std::endl;
+
+    if (!condition.has_value()) {
+      table->mapOverRecords([&](TableLeafCell cell) {
+        std::cout << cell.row_id << "|" << util::join(cell.row_data, "|")
+                  << std::endl;
+      });
+    } else {
+      table->mapOverRecords([&](TableLeafCell cell) {
+        if (isWhereSatisfied(cell.row_data[*where_column_idx], *condition)) {
+          std::cout << cell.row_id << "|" << util::join(cell.row_data, "|")
+                    << std::endl;
+        }
+      });
+    }
+
+  } else {
+    std::vector<size_t> column_idx;
+
+    for (size_t i = 0; i < column_names.size(); i++) {
+      bool found = false;
+      for (size_t idx = 0; idx < column_defs.size(); idx++) {
+        if (column_names[i] == column_defs[idx].name) {
+          column_idx.push_back(idx);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        throw std::runtime_error("Requested column name is not found");
+    }
+
+    std::cout << "rowid|" << util::join(column_names, "|") << std::endl;
+
+    if (!condition.has_value()) {
+      table->mapOverRecords([&](TableLeafCell cell) {
+        std::cout << cell.row_id;
+        for (size_t i = 0; i < column_idx.size(); i++)
+          std::cout << "|" << cell.row_data[column_idx[i]];
+        std::cout << std::endl;
+      });
+    } else {
+      table->mapOverRecords([&](TableLeafCell cell) {
+        if (isWhereSatisfied(cell.row_data[*where_column_idx], *condition)) {
+          std::cout << cell.row_id;
+          for (size_t i = 0; i < column_idx.size(); i++)
+            std::cout << "|" << cell.row_data[column_idx[i]];
+          std::cout << std::endl;
+        }
+      });
+    }
+  }
 }
 
 void DeleteFromCommand::execute(Database& database)
