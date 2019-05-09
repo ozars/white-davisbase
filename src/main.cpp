@@ -11,7 +11,7 @@ int main()
   while ((std::cout << "davisbase> "), getline(std::cin, cmd)) {
     try {
       parser.parse(cmd).execute(database);
-    } catch (const std::runtime_error& err) {
+    } catch (const std::exception& err) {
       std::cerr << "[ERROR] " << err.what() << std::endl;
     }
   }
