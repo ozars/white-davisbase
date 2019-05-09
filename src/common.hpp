@@ -168,6 +168,7 @@ inline std::ostream& operator<<(std::ostream& os, const OperatorType& op)
 
 struct NullValue
 {
+  bool operator<(const NullValue&) const { return false; }
   bool operator==(const NullValue&) const { return true; }
 };
 

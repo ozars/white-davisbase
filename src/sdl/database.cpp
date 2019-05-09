@@ -361,4 +361,24 @@ void Database::removeTable(std::string table_name)
   fs::remove(path);
 }
 
+void Database::makeColumnUnique(std::string table_name, std::string column_name)
+{
+  bool found = false;
+  schema_.columns.mapOverRecords([&](TableLeafPage& page, TableLeafCell cell) {
+    if (std::get<TextColumnValue>(cell.row_data[0]) == table_name &&
+        std::get<TextColumnValue>(cell.row_data[1]) == column_name) {
+      found = true;
+      auto& is_unique = std::get<TinyIntColumnValue>(cell.row_data[6]);
+      if (!is_unique.get()) {
+        is_unique = 1;
+        page.updateRecord(cell);
+      }
+      return false;
+    }
+    return true;
+  });
+  if (!found)
+    throw std::runtime_error("Column not found");
+}
+
 } // namespace white::davisbase::sdl

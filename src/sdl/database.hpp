@@ -59,6 +59,7 @@ public:
                     common::ColumnDefinitions&& column_definitions);
   std::optional<Table> getTable(const std::string& table_name);
   void removeTable(std::string table_name);
+  void makeColumnUnique(std::string table_name, std::string column_name);
 
   template<typename Mapper>
   void mapOverTables(Mapper&& mapper);
