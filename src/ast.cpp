@@ -73,7 +73,7 @@ void ShowTablesCommand::execute(Database& database)
 
 void DropTableCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  database.removeTable(table_name);
 }
 
 void CreateTableCommand::execute(Database& database)
