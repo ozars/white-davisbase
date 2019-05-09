@@ -235,7 +235,7 @@ void DeleteFromCommand::execute(Database& database)
   if (!table.has_value())
     throw std::runtime_error("Table doesn't exist");
 
-  if (condition == std::nullopt)
+  if (!condition.has_value())
     throw std::runtime_error("Where clause required");
 
   auto& column_defs = table->columnDefinitions();
