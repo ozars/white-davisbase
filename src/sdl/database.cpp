@@ -290,7 +290,7 @@ Table Database::createTable(const std::string& table_name,
   for (size_t i = 0; i < table.columnDefinitions().size(); i++) {
     auto& col = table.columnDefinitions()[i];
     schema_.columns.appendRecord(
-      {table_name, col.name, col.type, i + 1, col.modifiers.is_null,
+      {table_name, col.name, col.type, i + 1, !col.modifiers.not_null,
        col.modifiers.primary_key, col.modifiers.unique});
   }
   return table;
