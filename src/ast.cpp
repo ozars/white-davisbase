@@ -317,9 +317,6 @@ void UpdateCommand::execute(Database& database)
   });
 }
 
-void CreateIndexCommand::execute(Database& database)
-{
-  std::cout << *this << std::endl;
-}
+void CreateIndexCommand::execute(Database&) {}
 
 } // namespace white::davisbase::ast
