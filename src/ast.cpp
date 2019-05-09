@@ -1,6 +1,7 @@
 #include "ast.hpp"
 
 #include <iostream>
+#include <set>
 #include <vector>
 
 #include "sdl/database.hpp"
@@ -322,6 +323,34 @@ void UpdateCommand::execute(Database& database)
   });
 }
 
-void CreateIndexCommand::execute(Database&) {}
+void CreateIndexCommand::execute(Database& database)
+{
+  auto table = database.getTable(table_name);
+
+  if (!table.has_value())
+    throw std::runtime_error("Table not found");
+
+  std::optional<size_t> column_idx;
+  auto& column_defs = table->columnDefinitions();
+
+  for (size_t i = 0; i < column_defs.size(); i++) {
+    if (column_defs[i].name == column_name) {
+      column_idx = i;
+      break;
+    }
+  }
+
+  if (!column_idx.has_value())
+    throw std::runtime_error("Column not found");
+
+  std::set<ColumnValueVariant> vals;
+  table->mapOverRecords([&](TableLeafCell cell) {
+    auto& val = cell.row_data[*column_idx];
+    if (vals.find(val) != vals.end())
+      throw std::runtime_error("Uniqueness constraint violation");
+    vals.insert(val);
+  });
+  database.makeColumnUnique(table_name, column_name);
+}
 
 } // namespace white::davisbase::ast
