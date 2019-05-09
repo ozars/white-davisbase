@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include <map>
-
 #include "sdl/database.hpp"
 #include "sdl/table.hpp"
 
@@ -94,37 +92,27 @@ void SelectCommand::execute(Database& database)
 
 void DeleteFromCommand::execute(Database& database)
 {
-  using namespace white::davisbase::sdl;
-  auto table_opt = database.getTable(table_name);
-  if (!table_opt.has_value()) {
+  auto table = database.getTable(table_name);
+
+  if (!table.has_value())
     throw std::runtime_error("Table doesn't exist");
-  }
 
-  if (condition == std::nullopt) {
+  if (condition == std::nullopt)
     throw std::runtime_error("Where clause required");
-  }
 
-  auto& table = table_opt.value();
-  auto& column_defs = table.columnDefinitions();
-  std::map<std::string, common::ColumnDefinition> columns_map;
-  std::map<std::string, int> columns_idx_map;
+  auto& column_defs = table->columnDefinitions();
+  std::optional<size_t> idx;
 
-  for (int i = 0; i < column_defs.size(); i++) {
-    columns_map[column_defs[i].name] = column_defs[i];
-    columns_idx_map[column_defs[i].name] = i;
-  }
+  for (size_t i = 0; i < column_defs.size(); i++)
+    if (column_defs[i].name == condition->column_name)
+      idx = i;
 
-  if (columns_map.find(condition->column_name) == columns_map.end()) {
+  if (!idx.has_value())
     throw std::runtime_error("Column doesn't exist");
-  }
 
-  int idx = columns_idx_map[condition->column_name];
-
-  WhereClause where_condition = condition.value();
-
-  table.mapOverRecords(
+  table->mapOverRecords(
     [&](CellIndex i, TableLeafPage& page, TableLeafCell cell) {
-      if (isWhereSatisfied(cell.row_data[idx], where_condition)) {
+      if (isWhereSatisfied(cell.row_data[*idx], *condition)) {
         page.deleteRecord(i);
         return CellIndex(i - 1);
       }
