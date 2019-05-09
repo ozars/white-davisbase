@@ -1,18 +1,23 @@
 #include "ast.hpp"
-#include "sdl/table.hpp"
 
 #include <iostream>
 
 #include <map>
 
 #include "sdl/database.hpp"
+#include "sdl/table.hpp"
 
 namespace white::davisbase::ast {
 
 using common::NullValue;
+using sdl::CellIndex;
 using sdl::ColumnValueVariant;
 using sdl::Database;
 using sdl::TableLeafCell;
+using sdl::TableLeafPage;
+
+using sdl::createColumnValue;
+using sdl::createRowData;
 
 static bool isWhereSatisfied(const ColumnValueVariant& variant,
                              const WhereClause& condition)
