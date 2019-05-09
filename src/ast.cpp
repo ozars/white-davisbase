@@ -82,89 +82,65 @@ void CreateTableCommand::execute(Database& database)
 
 void InsertIntoCommand::execute(Database& database)
 {
-  using namespace white::davisbase::sdl;
-  using common::NullValue;
-  using std::holds_alternative;
+  using sdl::RowData;
 
-  auto table_opt = database.getTable(table_name);
-  if (!table_opt.has_value()) {
+  auto table = database.getTable(table_name);
+
+  if (!table.has_value())
     throw std::runtime_error("Table doesn't exist");
-  }
 
-  auto& table = table_opt.value();
-  auto column_defs = table.columnDefinitions();
-  std::map<std::string, common::ColumnDefinition> columns_map;
-
-  for (int i = 0; i < column_defs.size(); i++) {
-    columns_map[column_defs[i].name] = column_defs[i];
-  }
+  auto& column_defs = table->columnDefinitions();
+  RowData new_row_data;
 
   if (column_names.size() > 0) {
-    for (int i = 0; i < column_names.size(); i++) {
+    if (column_names.size() != values.size())
+      throw std::runtime_error(
+        "Column names list should have same length with values list");
 
-      if (columns_map.find(column_names[i]) != columns_map.end()) {
+    for (size_t i = 0; i < column_defs.size(); i++)
+      new_row_data.push_back(NullValue());
 
-        auto col_val_variant =
-          createColumnValue(columns_map[column_names[i]].type, values[i]);
-
-        // checking if the column allows nulls if the value is null
-        if (holds_alternative<NullValue>(col_val_variant) &&
-            !columns_map[column_names[i]].modifiers.is_null) {
-          throw std::runtime_error(column_names[i] + " column cannot be null");
-        }
-        // checking for uniqueness if the column is PK or unique
-        if (columns_map[column_names[i]].modifiers.primary_key ||
-            columns_map[column_names[i]].modifiers.unique) {
-          bool unique = true;
-          int col_index = 0;
-          for (int j = 0; j < column_defs.size(); j++) {
-            if (column_defs[j].name == columns_map[column_names[i]].name) {
-              col_index = j;
-              break;
-            }
-          }
-          table.mapOverRecords([&](TableLeafCell record) {
-            if (record.row_data[col_index] == col_val_variant) {
-              unique = false;
-              return false;
-            }
-          });
-          if (!unique)
-            throw std::runtime_error(column_names[i] +
-                                     " value of the column is not unique");
+    for (size_t j = 0; j < column_names.size(); j++) {
+      bool found = false;
+      for (size_t i = 0; i < column_defs.size() && !found; i++) {
+        if (column_names[j] == column_defs[i].name) {
+          new_row_data[i] = createColumnValue(column_defs[i].type, values[j]);
+          found = true;
         }
       }
+      if (!found)
+        throw std::runtime_error("Column name not found");
     }
-  } else {
-    // if no column names
-    for (int i = 0; i < column_defs.size(); i++) {
-      auto col_val_variant = createColumnValue(column_defs[i].type, values[i]);
-      // checking if the column allows nulls if the value is null
-      if (holds_alternative<NullValue>(col_val_variant) &&
-          !column_defs[i].modifiers.is_null) {
-        throw std::runtime_error(column_names[i] + " column cannot be null");
-      }
 
-      // checking for uniqueness if the column is PK or unique
-      if (column_defs[i].modifiers.primary_key ||
-          column_defs[i].modifiers.unique) {
-        bool unique = true;
+  } else { // if column names aren't explicitly given
+    if (column_defs.size() != values.size())
+      throw std::runtime_error(
+        "Number of given values doesn't match number of columns");
 
-        table.mapOverRecords([&](TableLeafCell record) {
-          if (record.row_data[i] == col_val_variant) {
-            unique = false;
-            return false;
-          }
-        });
+    new_row_data = createRowData(column_defs, values);
+  }
 
-        if (!unique)
-          throw std::runtime_error(column_names[i] +
-                                   " value of the column is not unique");
-      }
+  /* Null check */
+  for (size_t i = 0; i < column_defs.size(); i++) {
+    if (column_defs[i].modifiers.not_null &&
+        std::holds_alternative<NullValue>(new_row_data[i])) {
+      throw std::runtime_error("Null value for non-null column");
     }
   }
 
-  table.appendRecord(values);
+  /* Uniquness check */
+  table->mapOverRecords([&](TableLeafCell cell) {
+    for (size_t i = 0; i < column_defs.size(); i++) {
+      if (column_defs[i].modifiers.primary_key ||
+          column_defs[i].modifiers.unique) {
+        if (new_row_data[i] == cell.row_data[i]) {
+          throw std::runtime_error("Unique key violation");
+        }
+      }
+    }
+  });
+
+  table->appendRecord(new_row_data);
 }
 
 void SelectCommand::execute(Database& database)
