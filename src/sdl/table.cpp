@@ -142,7 +142,7 @@ void Table::commitPage(const Page& page)
 {
   file_.seekp(page.pageNo() * page_length_);
   file_.write(page.rawData(), page_length_);
-  // file_.flush();
+  file_.flush();
   if (file_.fail())
     throw std::runtime_error("Error while writing page to file");
 }
