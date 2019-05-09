@@ -163,13 +163,16 @@ inline std::ostream& operator<<(std::ostream& os, const CreateIndexCommand& cmd)
             << "\", column_name=\"" << cmd.column_name << "\"])";
 }
 
+struct ExitCommand
+{};
+
 struct Command
 {
   void execute(sdl::Database& database);
 
   std::variant<ShowTablesCommand, DropTableCommand, CreateTableCommand,
                InsertIntoCommand, SelectCommand, DeleteFromCommand,
-               UpdateCommand, CreateIndexCommand>
+               UpdateCommand, CreateIndexCommand, ExitCommand>
     command;
 };
 
@@ -198,6 +201,8 @@ BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::DeleteFromCommand, table_name,
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::CreateIndexCommand, is_unique,
                           table_name, column_name)
+
+BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::ExitCommand)
 
 BOOST_FUSION_ADAPT_STRUCT(white::davisbase::ast::WhereClause, column_name, op,
                           literal)

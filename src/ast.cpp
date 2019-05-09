@@ -62,7 +62,12 @@ static bool isWhereSatisfied(const ColumnValueVariant& variant,
 
 void Command::execute(Database& database)
 {
-  std::visit([&](auto&& arg) { arg.execute(database); }, command);
+  std::visit(
+    [&](auto&& arg) {
+      if constexpr (!std::is_same_v<std::decay_t<decltype(arg)>, ExitCommand>)
+        arg.execute(database);
+    },
+    command);
 }
 
 void ShowTablesCommand::execute(Database& database)
