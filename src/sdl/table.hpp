@@ -194,8 +194,6 @@ private:
   common::ColumnDefinitions column_definitions_;
 
   void appendRecord(const TableLeafCell& cell);
-  void appendRecord(const RowData& rows);
-  void appendRecord(RowData&& rows);
   TableLeafPage leftmostLeafPage();
   TableLeafPage leafPageByRowId(RowId row_id);
 
@@ -216,6 +214,8 @@ public:
 
   std::variant<TableInteriorPage, TableLeafPage> getPage(PageNo page_no);
 
+  void appendRecord(const RowData& rows);
+  void appendRecord(RowData&& rows);
   void appendRecord(const std::vector<common::LiteralValue>& values);
   void commitPage(const Page& page);
 

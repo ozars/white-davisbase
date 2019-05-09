@@ -82,12 +82,81 @@ void CreateTableCommand::execute(Database& database)
 
 void InsertIntoCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  using sdl::RowData;
+
+  auto table = database.getTable(table_name);
+
+  if (!table.has_value())
+    throw std::runtime_error("Table doesn't exist");
+
+  auto& column_defs = table->columnDefinitions();
+  RowData new_row_data;
+
+  if (column_names.size() > 0) {
+    if (column_names.size() != values.size())
+      throw std::runtime_error(
+        "Column names list should have same length with values list");
+
+    for (size_t i = 0; i < column_defs.size(); i++)
+      new_row_data.push_back(NullValue());
+
+    for (size_t j = 0; j < column_names.size(); j++) {
+      bool found = false;
+      for (size_t i = 0; i < column_defs.size() && !found; i++) {
+        if (column_names[j] == column_defs[i].name) {
+          new_row_data[i] = createColumnValue(column_defs[i].type, values[j]);
+          found = true;
+        }
+      }
+      if (!found)
+        throw std::runtime_error("Column name not found");
+    }
+
+  } else { // if column names aren't explicitly given
+    if (column_defs.size() != values.size())
+      throw std::runtime_error(
+        "Number of given values doesn't match number of columns");
+
+    new_row_data = createRowData(column_defs, values);
+  }
+
+  /* Null check */
+  for (size_t i = 0; i < column_defs.size(); i++) {
+    if (column_defs[i].modifiers.not_null &&
+        std::holds_alternative<NullValue>(new_row_data[i])) {
+      throw std::runtime_error("Null value for non-null column");
+    }
+  }
+
+  /* Uniquness check */
+  table->mapOverRecords([&](TableLeafCell cell) {
+    for (size_t i = 0; i < column_defs.size(); i++) {
+      if (column_defs[i].modifiers.primary_key ||
+          column_defs[i].modifiers.unique) {
+        if (new_row_data[i] == cell.row_data[i]) {
+          throw std::runtime_error("Unique key violation");
+        }
+      }
+    }
+  });
+
+  table->appendRecord(new_row_data);
 }
 
 void SelectCommand::execute(Database& database)
 {
-  std::cout << *this << std::endl;
+  // using namespace white::davisbase::sdl;
+  //   using common::NullValue;
+  //   using std::holds_alternative;
+
+  //   auto table_opt = database.getTable(table_name);
+  //    if (!table_opt.has_value()) {
+  //     throw std::runtime_error("Table doesn't exist");
+  //   }
+
+  //   auto& table = table_opt.value();
+  //   auto column_defs = table.columnDefinitions();
+  // std::cout << *this << std::endl;
 }
 
 void DeleteFromCommand::execute(Database& database)

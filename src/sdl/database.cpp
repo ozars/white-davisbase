@@ -226,6 +226,7 @@ common::ColumnDefinitions Database::getColumnsInfo(
       col_def.type =
         static_cast<ColumnType>(get<TinyIntColumnValue>(row_data[2]).get());
       col_def.modifiers.is_null = get<TinyIntColumnValue>(row_data[4]).get();
+      col_def.modifiers.not_null = !get<TinyIntColumnValue>(row_data[4]).get();
       col_def.modifiers.primary_key =
         get<TinyIntColumnValue>(row_data[5]).get();
       col_def.modifiers.unique = get<TinyIntColumnValue>(row_data[6]).get();
