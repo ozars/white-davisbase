@@ -122,6 +122,8 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
                    (Q("UNIQUE") >> qi::attr(true) | qi::attr(false)) >>
                    Q("INDEX", "ON") >> table_name >> '(' >> column_name >> ')';
 
+    exit = Q("EXIT");
+
     /* DML */
 
     insert_into = Q("INSERT", "INTO") >> table_name >>
@@ -139,7 +141,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
     /* Main command */
 
     command = (show_tables | drop_table | create_table | insert_into | select |
-               delete_from | update | create_index) >>
+               delete_from | update | create_index | exit) >>
               ';';
   }
 
@@ -176,7 +178,7 @@ struct QueryGrammar : qi::grammar<Iterator, Command(), Skipper>
   qi::rule<Iterator, ast::DeleteFromCommand(), Skipper> delete_from;
   qi::rule<Iterator, ast::SelectCommand(), Skipper> select;
   qi::rule<Iterator, ast::UpdateCommand(), Skipper> update;
-  qi::rule<Iterator, Skipper> exit;
+  qi::rule<Iterator, ast::ExitCommand(), Skipper> exit;
 
   qi::rule<Iterator, Command(), Skipper> command;
 };
